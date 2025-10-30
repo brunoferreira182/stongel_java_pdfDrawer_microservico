@@ -1,0 +1,49 @@
+{
+  "empresa": {
+    "razaoSocial": "STONGEL REVESTIMENTOS",
+    "cnpj": "12.345.678/0001-99",
+    "telefone": "(51) 99999-9999",
+    "email": "contato@stongel.com.br",
+    "endereco": "Rua Epóxi, 1000",
+    "cidadeUf": "Porto Alegre/RS"
+  },
+  "obra": "Av. das Indústrias, 200 - Galpão 3",
+  "materiais": [
+    {
+      "codigo": "STG 905",
+      "descricao": "Verniz Epóxi 7,00 KG (A+B)",
+      "comp": "A+B",
+      "unidade": "CJ",
+      "quantidade": 7,
+      "precoUnit": 376.82,
+      "subtotal": 2637.74
+    },
+    {
+      "codigo": "STG 916",
+      "descricao": "Autonivelante Epóxi 7,00 KG (A+B)",
+      "comp": "A+B",
+      "unidade": "CJ",
+      "quantidade": 7,
+      "precoUnit": 420.00,
+      "subtotal": 2940.00
+    }
+  ],
+  "servicos": [
+    {
+      "codigo": "SVC 001",
+      "descricao": "Aplicação de revestimento epóxi",
+      "comp": "-",
+      "unidade": "m²",
+      "quantidade": 120,
+      "precoUnit": 25.00,
+      "subtotal": 3000.00
+    }
+  ],
+  "totais": {
+    "totalMateriais": 5577.74,
+    "totalServicos": 3000.00,
+    "desconto": 200.00,
+    "valorFinal": 8377.74
+  },
+  "observacoes": "Prazo de execução: 7 dias úteis após confirmação. Garantia de 12 meses."
+}
