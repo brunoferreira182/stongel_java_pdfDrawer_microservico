@@ -45,9 +45,9 @@ public class StongelTemplateRenderer {
 
     // Tipografia
     private static final PDFont FONT_REG = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-    private static final PDFont FONT_B   = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+    // private static final PDFont FONT_B   = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
     private static final float FONT_H      = 10f;
-    private static final float FONT_H_BOLD = 12f;
+    // private static final float FONT_H_BOLD = 12f;
 
     // Flags/props de grade (podem ser lidas uma vez; valores padrão caso não setado)
     private static final boolean DEBUG_GRID = "1".equals(System.getProperty("pdf.grid"));
@@ -72,6 +72,7 @@ public class StongelTemplateRenderer {
         // Empresa / Obra (página header)
         float X_EMPRESA   = getF(cfg, "empresa.x", 60f);
         float Y_EMP_RAZAO = getF(cfg, "empresa.yRazao", 740f);
+        float Y_EMP_CONTATO  = getF(cfg, "empresa.yContato", 725f);
         float Y_EMP_CNPJ  = getF(cfg, "empresa.yCnpj", 725f);
         float Y_EMP_TEL   = getF(cfg, "empresa.yTel", 710f);
         float Y_EMP_EMAIL = getF(cfg, "empresa.yEmail", 695f);
@@ -117,13 +118,14 @@ public class StongelTemplateRenderer {
 
                 // Empresa
                 var emp = dto.getEmpresa();
-                BR.drawText(cs, FONT_B,   FONT_H_BOLD, X_EMPRESA, Y_EMP_RAZAO,  emp != null ? emp.getRazaoSocial() : "-");
+                BR.drawText(cs, FONT_REG,   FONT_H, X_EMPRESA, Y_EMP_RAZAO,  emp != null ? emp.getRazaoSocial() : "-");
                 BR.drawText(cs, FONT_REG, FONT_H,      X_EMPRESA, Y_EMP_CNPJ,   emp != null ? emp.getCnpj()        : "-");
+                BR.drawText(cs, FONT_REG, FONT_H,      X_EMPRESA, Y_EMP_CONTATO,   emp != null ? emp.getContato()        : "-");
                 BR.drawText(cs, FONT_REG, FONT_H,      X_EMPRESA, Y_EMP_TEL,    emp != null ? emp.getTelefone()    : "-");
                 BR.drawText(cs, FONT_REG, FONT_H,      X_EMPRESA, Y_EMP_EMAIL,  emp != null ? emp.getEmail()       : "-");
 
                 // Obra
-                BR.drawText(cs, FONT_B,   FONT_H, X_OBRA_LABEL, Y_OBRA, "Obra:");
+                BR.drawText(cs, FONT_REG,   FONT_H, X_OBRA_LABEL, Y_OBRA, "Obra:");
                 drawParagraph(cs, FONT_REG, FONT_H, X_OBRA_VAL, Y_OBRA, OBRA_MAX_W, safe(dto.getObra()), 12f);
 
                 // Totais
@@ -211,8 +213,8 @@ public class StongelTemplateRenderer {
 
     /** Totais na página de cabeçalho. */
     private static void drawTotals(PDPageContentStream cs, TotaisDto t,
-                                   float X_TOT_LABEL, float X_TOT_VAL,
-                                   float Y_TOT_TOP, float Y_TOT_STEP) throws IOException {
+        float X_TOT_LABEL, float X_TOT_VAL,
+        float Y_TOT_TOP, float Y_TOT_STEP) throws IOException {
         if (t == null) return;
         float y = Y_TOT_TOP;
 
@@ -226,13 +228,13 @@ public class StongelTemplateRenderer {
     private static void drawTotalLine(PDPageContentStream cs, String label, Number val, float y,
                                       float X_TOT_LABEL, float X_TOT_VAL) throws IOException {
         BR.drawText(cs, FONT_REG, FONT_H, X_TOT_LABEL, y, label);
-        BR.drawText(cs, FONT_B,   FONT_H, X_TOT_VAL,   y, BR.moeda(val));
+        BR.drawText(cs, FONT_REG,   FONT_H, X_TOT_VAL,   y, BR.moeda(val));
     }
 
     private static void drawTotalBold(PDPageContentStream cs, String label, Number val, float y,
                                       float X_TOT_LABEL, float X_TOT_VAL) throws IOException {
-        BR.drawText(cs, FONT_B,   FONT_H, X_TOT_LABEL, y, label);
-        BR.drawText(cs, FONT_B,   FONT_H, X_TOT_VAL,   y, BR.moeda(val));
+        BR.drawText(cs, FONT_REG,   FONT_H, X_TOT_LABEL, y, label);
+        BR.drawText(cs, FONT_REG,   FONT_H, X_TOT_VAL,   y, BR.moeda(val));
     }
 
     /** Parágrafo com quebra automática respeitando largura máxima. */

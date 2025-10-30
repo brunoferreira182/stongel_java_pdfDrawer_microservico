@@ -11,6 +11,9 @@ public class EmpresaDto {
     @JsonAlias({"cnpj","CNPJ"})
     private String cnpj;
 
+    @JsonAlias({"contato","Contato"})
+    private String contato;
+
     @JsonAlias({"telefone","fone","tel"})
     private String telefone;
 
@@ -22,6 +25,9 @@ public class EmpresaDto {
 
     public String getCnpj() { return cnpj; }
     public void setCnpj(String cnpj) { this.cnpj = cnpj; }
+
+    public String getContato() { return contato; }
+    public void setContato(String contato) { this.contato = contato; }
 
     public String getTelefone() { return telefone; }
     public void setTelefone(String telefone) { this.telefone = telefone; }

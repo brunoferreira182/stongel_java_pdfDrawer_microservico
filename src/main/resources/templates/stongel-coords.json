@@ -6,10 +6,10 @@
   "empresa": {
     "x": 120,
     "yRazao": 175,
-    "yCnpj": 225,
-    "yContato": 215,
-    "yTel": 210,
-    "yEmail": 195
+    "yCnpj": 155,
+    "yContato": 135,
+    "yTel": 115,
+    "yEmail": 95
   },
   "tabelas": {
     "cols": {
@@ -42,10 +42,10 @@
   "probes": {
     "page1": [
       { "x": 60,  "y": 175, "label": "Razão Social:" },
-      { "x": 60,  "y": 135, "label": "CNPJ" },
-      { "x": 60,  "y": 120, "label": "Contato" },
-      { "x": 60,  "y": 105, "label": "Telefone" },
-      { "x": 60,  "y": 80, "label": "Email" },
+      { "x": 60,  "y": 155, "label": "CNPJ:" },
+      { "x": 60,  "y": 135, "label": "Contato:" },
+      { "x": 60,  "y": 115, "label": "Telefone:" },
+      { "x": 60,  "y": 95, "label": "E-mail:" },
       { "x": 420, "y": 200, "label": "Totais-Label" },
       { "x": 560, "y": 200, "label": "Totais-Valor" }
     ],
