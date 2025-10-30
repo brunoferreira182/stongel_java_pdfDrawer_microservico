@@ -1,49 +1,40 @@
 {
   "empresa": {
-    "razaoSocial": "STONGEL REVESTIMENTOS",
-    "cnpj": "12.345.678/0001-99",
-    "telefone": "(51) 99999-9999",
-    "email": "contato@stongel.com.br",
-    "endereco": "Rua Epóxi, 1000",
-    "cidadeUf": "Porto Alegre/RS"
+    "razaoSocial": "STONGEL REVESTIMENTOS LTDA",
+    "cnpj": "12.345.678/0001-90",
+    "telefone": "(51) 99999-0000",
+    "email": "contato@stongel.com.br"
   },
-  "obra": "Av. das Indústrias, 200 - Galpão 3",
+  "obra": "Rua X, 123, Bairro Y, Cidade/UF - CEP 90000-000",
   "materiais": [
     {
-      "codigo": "STG 905",
-      "descricao": "Verniz Epóxi 7,00 KG (A+B)",
+      "descricao": "STG 905 - Verniz Epóxi 7,00 KG (A+B)",
       "comp": "A+B",
       "unidade": "CJ",
       "quantidade": 7,
-      "precoUnit": 376.82,
-      "subtotal": 2637.74
-    },
-    {
-      "codigo": "STG 916",
-      "descricao": "Autonivelante Epóxi 7,00 KG (A+B)",
-      "comp": "A+B",
-      "unidade": "CJ",
-      "quantidade": 7,
-      "precoUnit": 420.00,
-      "subtotal": 2940.00
+      "custo": 376.82,
+      "precoVenda": 0,
+      "limiteDesconto": 0,
+      "precoKg": 53.83
     }
   ],
   "servicos": [
     {
-      "codigo": "SVC 001",
-      "descricao": "Aplicação de revestimento epóxi",
+      "descricao": "Aplicação de revestimento epóxi 100% sólidos",
       "comp": "-",
-      "unidade": "m²",
-      "quantidade": 120,
-      "precoUnit": 25.00,
-      "subtotal": 3000.00
+      "unidade": "M2",
+      "quantidade": 100,
+      "custo": 0,
+      "precoVenda": 3500,
+      "limiteDesconto": 0,
+      "precoKg": 0
     }
   ],
   "totais": {
-    "totalMateriais": 5577.74,
-    "totalServicos": 3000.00,
-    "desconto": 200.00,
-    "valorFinal": 8377.74
-  },
-  "observacoes": "Prazo de execução: 7 dias úteis após confirmação. Garantia de 12 meses."
+    "totalMateriais": 376.82,
+    "totalServicos": 3500.00,
+    "subtotal": 3876.82,
+    "desconto": 0,
+    "totalGeral": 3876.82
+  }
 }

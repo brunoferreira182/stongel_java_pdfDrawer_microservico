@@ -1,0 +1,76 @@
+{
+  "pageIndexes": {
+    "headerTotais": 0,
+    "tables": 6
+  },
+  "empresa": {
+    "x": 60,
+    "yRazao": 240,
+    "yCnpj": 225,
+    "yTel": 210,
+    "yEmail": 195
+  },
+  "obra": {
+    "xLabel": 60,
+    "xVal": 100,
+    "y": 100,
+    "maxW": 460
+  },
+  "tabelas": {
+    "cols": {
+      "desc": 60,
+      "comp": 300,
+      "un": 340,
+      "qtd": 380,
+      "custo": 420,
+      "preco": 470,
+      "descLim": 530,
+      "precoKg": 585
+    },
+    "materiais": {
+      "yFirst": 598,
+      "rowStep": 16,
+      "yMin": 380
+    },
+    "servicos": {
+      "yFirst": 328,
+      "rowStep": 16,
+      "yMin": 190
+    }
+  },
+  "totais": {
+    "xLabel": 420,
+    "xVal": 560,
+    "yTop": 200,
+    "step": 16
+  },
+  "probes": {
+    "page1": [
+      { "x": 60,  "y": 140, "label": "RazãoSocial" },
+      { "x": 60,  "y": 125, "label": "CNPJ" },
+      { "x": 60,  "y": 110, "label": "Tel" },
+      { "x": 60,  "y": 195, "label": "Email" },
+      { "x": 420, "y": 200, "label": "Totais-Label" },
+      { "x": 560, "y": 200, "label": "Totais-Valor" }
+    ],
+    "pageTables": [
+      { "x": 60,  "y": 598, "label": "DESC-MAT" },
+      { "x": 300, "y": 598, "label": "COMP-MAT" },
+      { "x": 340, "y": 598, "label": "UN-MAT" },
+      { "x": 380, "y": 598, "label": "QTD-MAT" },
+      { "x": 420, "y": 598, "label": "CUSTO-MAT" },
+      { "x": 470, "y": 598, "label": "PRECO-MAT" },
+      { "x": 530, "y": 598, "label": "DESC%-MAT" },
+      { "x": 585, "y": 598, "label": "PRECO/KG-MAT" },
+
+      { "x": 60,  "y": 328, "label": "DESC-SRV" },
+      { "x": 300, "y": 328, "label": "COMP-SRV" },
+      { "x": 340, "y": 328, "label": "UN-SRV" },
+      { "x": 380, "y": 328, "label": "QTD-SRV" },
+      { "x": 420, "y": 328, "label": "CUSTO-SRV" },
+      { "x": 470, "y": 328, "label": "PRECO-SRV" },
+      { "x": 530, "y": 328, "label": "DESC%-SRV" },
+      { "x": 585, "y": 328, "label": "PRECO/KG-SRV" }
+    ]
+  }
+}

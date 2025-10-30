@@ -1,12 +1,26 @@
 package com.stongel.pdfdrawer.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class BudgetDto {
+
+    @JsonAlias({"empresa","dadosEmpresa"})
     private EmpresaDto empresa;
+
+    @JsonAlias({"obra","enderecoObra","localObra"})
     private String obra;
+
+    @JsonAlias({"materiais","itensMateriais","produtos"})
     private List<ItemDto> materiais;
+
+    @JsonAlias({"servicos","itensServicos"})
     private List<ItemDto> servicos;
+
+    @JsonAlias({"totais","resumoTotais"})
     private TotaisDto totais;
 
     public EmpresaDto getEmpresa() { return empresa; }
