@@ -27,83 +27,92 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Renderer com:
- * - Leitura de coordenadas de templates/stongel-coords.json (sem recompilar)
- * - Preenche pág. 1 (header/totais) e pág. 7 (tabelas) — apenas DADOS
- * - Origem normalizada para CropBox
- * - Grade de calibração: -Dpdf.grid=1 (passo configurável via -Dpdf.gridStep e -Dpdf.gridMajor)
- * - Probes (alfinetes): lidos do JSON, desenham cruzes + rótulos em (x,y) exatos
+ * Preenche:
+ *  - Página de cabeçalho (header/totais), normalmente página 1 (index 0)
+ *  - Página de tabelas (materiais/serviços), normalmente página 7 (index 6)
+ *
+ * Lê coordenadas de "src/main/resources/templates/stongel-coords.json" a cada chamada.
+ * O template base é "src/main/resources/templates/STONGEL - PDF.pdf".
+ *
+ * Recursos:
+ *  - Apenas DADOS (cabeçalhos/títulos já estão no template)
+ *  - Origem normalizada para CropBox
+ *  - Grade de calibração: -Dpdf.grid=1  (opções: -Dpdf.gridStep=10, -Dpdf.gridMajor=100)
+ *  - Probes (alfinetes): definidos no JSON para marcar (x,y) exatos
  */
 @Component
 public class StongelTemplateRenderer {
 
-    // ---- Tipografia ----
+    // Tipografia
     private static final PDFont FONT_REG = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
     private static final PDFont FONT_B   = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
     private static final float FONT_H      = 10f;
     private static final float FONT_H_BOLD = 12f;
 
-    // ---- Config carregada do JSON ----
-    private static final JsonNode CFG = loadConfig(); // lazy static
-    private static final int PAGE_IDX_HEADER_TOTAIS = getInt(CFG, "pageIndexes.headerTotais", 0);
-    private static final int PAGE_IDX_TABELAS       = getInt(CFG, "pageIndexes.tables", 6);
-
-    // Empresa (página 1)
-    private static final float X_EMPRESA   = getF(CFG, "empresa.x", 60f);
-    private static final float Y_EMP_RAZAO = getF(CFG, "empresa.yRazao", 740f);
-    private static final float Y_EMP_CNPJ  = getF(CFG, "empresa.yCnpj", 725f);
-    private static final float Y_EMP_TEL   = getF(CFG, "empresa.yTel", 710f);
-    private static final float Y_EMP_EMAIL = getF(CFG, "empresa.yEmail", 695f);
-
-    // Obra (página 1)
-    private static final float X_OBRA_LABEL = getF(CFG, "obra.xLabel", 60f);
-    private static final float X_OBRA_VAL   = getF(CFG, "obra.xVal", 100f);
-    private static final float Y_OBRA       = getF(CFG, "obra.y", 665f);
-    private static final float OBRA_MAX_W   = getF(CFG, "obra.maxW", 460f);
-
-    // Tabela (página 7) — apenas DADOS
-    private static final float X_COL_DESC     = getF(CFG, "tabelas.cols.desc", 60f);
-    private static final float X_COL_COMP     = getF(CFG, "tabelas.cols.comp", 300f);
-    private static final float X_COL_UN       = getF(CFG, "tabelas.cols.un", 340f);
-    private static final float X_COL_QTD      = getF(CFG, "tabelas.cols.qtd", 380f);
-    private static final float X_COL_CUSTO    = getF(CFG, "tabelas.cols.custo", 420f);
-    private static final float X_COL_PRECO    = getF(CFG, "tabelas.cols.preco", 470f);
-    private static final float X_COL_DESC_LIM = getF(CFG, "tabelas.cols.descLim", 530f);
-    private static final float X_COL_PRECO_KG = getF(CFG, "tabelas.cols.precoKg", 585f);
-
-    private static final float Y_MAT_FIRSTLINE = getF(CFG, "tabelas.materiais.yFirst", 598f);
-    private static final float Y_SRV_FIRSTLINE = getF(CFG, "tabelas.servicos.yFirst", 328f);
-    private static final float Y_ROW_STEP      = getF(CFG, "tabelas.materiais.rowStep", 16f);
-    private static final float Y_MIN_MAT       = getF(CFG, "tabelas.materiais.yMin", 380f);
-    private static final float Y_MIN_SRV       = getF(CFG, "tabelas.servicos.yMin", 190f);
-
-    // Totais (página 1)
-    private static final float X_TOT_LABEL = getF(CFG, "totais.xLabel", 420f);
-    private static final float X_TOT_VAL   = getF(CFG, "totais.xVal", 560f);
-    private static final float Y_TOT_TOP   = getF(CFG, "totais.yTop", 200f);
-    private static final float Y_TOT_STEP  = getF(CFG, "totais.step", 16f);
-
-    // Grade de calibração
-    private static final boolean DEBUG_GRID   = "1".equals(System.getProperty("pdf.grid"));
-    private static final float   GRID_STEP    = getSysF("pdf.gridStep", 10f);   // subgraduação fina
-    private static final float   GRID_MAJOR   = getSysF("pdf.gridMajor", 100f); // linhas grossas/numeradas
+    // Flags/props de grade (podem ser lidas uma vez; valores padrão caso não setado)
+    private static final boolean DEBUG_GRID = "1".equals(System.getProperty("pdf.grid"));
+    private static final float   GRID_STEP  = getSysF("pdf.gridStep", 10f);
+    private static final float   GRID_MAJOR = getSysF("pdf.gridMajor", 100f);
 
     public byte[] renderFromTemplate(BudgetDto dto) throws Exception {
-        // 1) Carrega template
+
+        // 1) Carrega o template
         byte[] templateBytes;
         try (InputStream is = new ClassPathResource("templates/STONGEL - PDF.pdf").getInputStream()) {
             templateBytes = is.readAllBytes();
         }
 
+        // 2) Carrega coordenadas do JSON (reload a cada chamada)
+        JsonNode cfg = loadDynamicConfig();
+
+        // Páginas alvo (0-based)
+        int PAGE_IDX_HEADER_TOTAIS = getInt(cfg, "pageIndexes.headerTotais", 0);
+        int PAGE_IDX_TABELAS       = getInt(cfg, "pageIndexes.tables", 6);
+
+        // Empresa / Obra (página header)
+        float X_EMPRESA   = getF(cfg, "empresa.x", 60f);
+        float Y_EMP_RAZAO = getF(cfg, "empresa.yRazao", 740f);
+        float Y_EMP_CNPJ  = getF(cfg, "empresa.yCnpj", 725f);
+        float Y_EMP_TEL   = getF(cfg, "empresa.yTel", 710f);
+        float Y_EMP_EMAIL = getF(cfg, "empresa.yEmail", 695f);
+
+        float X_OBRA_LABEL = getF(cfg, "obra.xLabel", 60f);
+        float X_OBRA_VAL   = getF(cfg, "obra.xVal", 100f);
+        float Y_OBRA       = getF(cfg, "obra.y", 665f);
+        float OBRA_MAX_W   = getF(cfg, "obra.maxW", 460f);
+
+        // Tabela (página de tabelas) — apenas DADOS
+        float X_COL_DESC     = getF(cfg, "tabelas.cols.desc", 60f);
+        float X_COL_COMP     = getF(cfg, "tabelas.cols.comp", 300f);
+        float X_COL_UN       = getF(cfg, "tabelas.cols.un", 340f);
+        float X_COL_QTD      = getF(cfg, "tabelas.cols.qtd", 380f);
+        float X_COL_CUSTO    = getF(cfg, "tabelas.cols.custo", 420f);
+        float X_COL_PRECO    = getF(cfg, "tabelas.cols.preco", 470f);
+        float X_COL_DESC_LIM = getF(cfg, "tabelas.cols.descLim", 530f);
+        float X_COL_PRECO_KG = getF(cfg, "tabelas.cols.precoKg", 585f);
+
+        float Y_MAT_FIRSTLINE = getF(cfg, "tabelas.materiais.yFirst", 598f);
+        float Y_SRV_FIRSTLINE = getF(cfg, "tabelas.servicos.yFirst", 328f);
+        float Y_ROW_STEP      = getF(cfg, "tabelas.materiais.rowStep", 16f);
+        float Y_MIN_MAT       = getF(cfg, "tabelas.materiais.yMin", 380f);
+        float Y_MIN_SRV       = getF(cfg, "tabelas.servicos.yMin", 190f);
+
+        // Totais (página header)
+        float X_TOT_LABEL = getF(cfg, "totais.xLabel", 420f);
+        float X_TOT_VAL   = getF(cfg, "totais.xVal", 560f);
+        float Y_TOT_TOP   = getF(cfg, "totais.yTop", 200f);
+        float Y_TOT_STEP  = getF(cfg, "totais.step", 16f);
+
         try (PDDocument doc = Loader.loadPDF(templateBytes)) {
 
-            // ===== Página 1: Cabeçalho/Obra/Totais =====
+            // ===== Página de Cabeçalho/Totais =====
             PDPage pageHeader = doc.getPage(PAGE_IDX_HEADER_TOTAIS);
             try (PDPageContentStream cs = new PDPageContentStream(doc, pageHeader, AppendMode.APPEND, true, true)) {
                 normalizeToCropBox(cs, pageHeader);
+
                 if (DEBUG_GRID) {
                     drawGrid(cs, pageHeader, GRID_STEP, GRID_MAJOR);
-                    drawProbes(cs, CFG.path("probes").path("page1"));
+                    drawProbes(cs, cfg.path("probes").path("page1"));
                 }
 
                 // Empresa
@@ -118,29 +127,34 @@ public class StongelTemplateRenderer {
                 drawParagraph(cs, FONT_REG, FONT_H, X_OBRA_VAL, Y_OBRA, OBRA_MAX_W, safe(dto.getObra()), 12f);
 
                 // Totais
-                drawTotals(cs, dto.getTotais());
+                drawTotals(cs, dto.getTotais(), X_TOT_LABEL, X_TOT_VAL, Y_TOT_TOP, Y_TOT_STEP);
             }
 
-            // ===== Página 7: Materiais/Serviços =====
+            // ===== Página de Tabelas (Materiais/Serviços) =====
             PDPage pageTab = doc.getPage(PAGE_IDX_TABELAS);
             try (PDPageContentStream cs = new PDPageContentStream(doc, pageTab, AppendMode.APPEND, true, true)) {
                 normalizeToCropBox(cs, pageTab);
+
                 if (DEBUG_GRID) {
                     drawGrid(cs, pageTab, GRID_STEP, GRID_MAJOR);
-                    drawProbes(cs, CFG.path("probes").path("pageTables"));
+                    drawProbes(cs, cfg.path("probes").path("pageTables"));
                 }
 
-                // Materiais
+                // Materiais (todas as linhas, se houver)
                 if (hasItems(dto.getMateriais())) {
-                    drawItems(cs, Y_MAT_FIRSTLINE + Y_ROW_STEP, dto.getMateriais(), true);
+                    drawItems(cs, Y_MAT_FIRSTLINE + Y_ROW_STEP, dto.getMateriais(), true,
+                            X_COL_DESC, X_COL_COMP, X_COL_UN, X_COL_QTD, X_COL_CUSTO, X_COL_PRECO, X_COL_DESC_LIM, X_COL_PRECO_KG,
+                            Y_ROW_STEP, Y_MIN_MAT, Y_MIN_SRV);
                 }
-                // Serviços
+                // Serviços (todas as linhas, se houver)
                 if (hasItems(dto.getServicos())) {
-                    drawItems(cs, Y_SRV_FIRSTLINE + Y_ROW_STEP, dto.getServicos(), false);
+                    drawItems(cs, Y_SRV_FIRSTLINE + Y_ROW_STEP, dto.getServicos(), false,
+                            X_COL_DESC, X_COL_COMP, X_COL_UN, X_COL_QTD, X_COL_CUSTO, X_COL_PRECO, X_COL_DESC_LIM, X_COL_PRECO_KG,
+                            Y_ROW_STEP, Y_MIN_MAT, Y_MIN_SRV);
                 }
             }
 
-            // 3) Exporta
+            // Exporta
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                 doc.save(baos);
                 return baos.toByteArray();
@@ -148,49 +162,9 @@ public class StongelTemplateRenderer {
         }
     }
 
-    // ----------------- Helpers -----------------
+    // ----------------- Helpers de desenho -----------------
 
-    private static JsonNode loadConfig() {
-        try (InputStream is = new ClassPathResource("templates/stongel-coords.json").getInputStream()) {
-            return new ObjectMapper().readTree(is);
-        } catch (Exception e) {
-            // fallback mínima
-            ObjectMapper om = new ObjectMapper();
-            try {
-                return om.readTree("{\"pageIndexes\":{\"headerTotais\":0,\"tables\":6}}");
-            } catch (IOException ex) {
-                throw new RuntimeException("Falha ao carregar stongel-coords.json", ex);
-            }
-        }
-    }
-
-    private static int getInt(JsonNode n, String path, int def) {
-        JsonNode j = at(n, path);
-        return (j != null && j.isInt()) ? j.asInt() : def;
-    }
-
-    private static float getF(JsonNode n, String path, float def) {
-        JsonNode j = at(n, path);
-        return (j != null && j.isNumber()) ? (float) j.asDouble() : def;
-    }
-
-    private static float getSysF(String prop, float def) {
-        String v = System.getProperty(prop);
-        if (v == null || v.isBlank()) return def;
-        try { return Float.parseFloat(v); } catch (Exception e) { return def; }
-    }
-
-    private static JsonNode at(JsonNode n, String path) {
-        String[] ps = path.split("\\.");
-        JsonNode cur = n;
-        for (String p : ps) {
-            if (cur == null) return null;
-            cur = cur.get(p);
-        }
-        return cur;
-    }
-
-    /** Normaliza origem (0,0) para a CropBox. */
+    /** Normaliza a origem (0,0) para a CropBox da página. */
     private static void normalizeToCropBox(PDPageContentStream cs, PDPage page) throws IOException {
         PDRectangle crop = page.getCropBox();
         if (crop != null) {
@@ -204,7 +178,12 @@ public class StongelTemplateRenderer {
     }
 
     /** Desenha linhas de itens (somente DADOS). */
-    private static float drawItems(PDPageContentStream cs, float yStart, List<ItemDto> itens, boolean materiais) throws IOException {
+    private static float drawItems(
+            PDPageContentStream cs, float yStart, List<ItemDto> itens, boolean materiais,
+            float X_COL_DESC, float X_COL_COMP, float X_COL_UN, float X_COL_QTD, float X_COL_CUSTO,
+            float X_COL_PRECO, float X_COL_DESC_LIM, float X_COL_PRECO_KG,
+            float Y_ROW_STEP, float Y_MIN_MAT, float Y_MIN_SRV
+    ) throws IOException {
         if (!hasItems(itens)) return yStart;
 
         float y = yStart - Y_ROW_STEP;
@@ -223,31 +202,35 @@ public class StongelTemplateRenderer {
 
             y -= Y_ROW_STEP;
 
-            // Limites pra não invadir outros blocos
+            // Limites para não invadir outros blocos do template
             if (materiais && y < Y_MIN_MAT) break;
             if (!materiais && y < Y_MIN_SRV) break;
         }
         return y;
     }
 
-    /** Totais (página headerTotais). */
-    private static void drawTotals(PDPageContentStream cs, TotaisDto t) throws IOException {
+    /** Totais na página de cabeçalho. */
+    private static void drawTotals(PDPageContentStream cs, TotaisDto t,
+                                   float X_TOT_LABEL, float X_TOT_VAL,
+                                   float Y_TOT_TOP, float Y_TOT_STEP) throws IOException {
         if (t == null) return;
         float y = Y_TOT_TOP;
 
-        drawTotalLine(cs, "Subtotal",        t.getSubtotal(),       y); y -= Y_TOT_STEP;
-        drawTotalLine(cs, "Desconto",        t.getDesconto(),       y); y -= Y_TOT_STEP;
-        drawTotalLine(cs, "Total Materiais", t.getTotalMateriais(), y); y -= Y_TOT_STEP;
-        drawTotalLine(cs, "Total Serviços",  t.getTotalServicos(),  y); y -= Y_TOT_STEP;
-        drawTotalBold(cs, "TOTAL GERAL",     t.getTotalGeral(),     y);
+        drawTotalLine(cs, "Subtotal",        t.getSubtotal(),       y, X_TOT_LABEL, X_TOT_VAL); y -= Y_TOT_STEP;
+        drawTotalLine(cs, "Desconto",        t.getDesconto(),       y, X_TOT_LABEL, X_TOT_VAL); y -= Y_TOT_STEP;
+        drawTotalLine(cs, "Total Materiais", t.getTotalMateriais(), y, X_TOT_LABEL, X_TOT_VAL); y -= Y_TOT_STEP;
+        drawTotalLine(cs, "Total Serviços",  t.getTotalServicos(),  y, X_TOT_LABEL, X_TOT_VAL); y -= Y_TOT_STEP;
+        drawTotalBold(cs, "TOTAL GERAL",     t.getTotalGeral(),     y, X_TOT_LABEL, X_TOT_VAL);
     }
 
-    private static void drawTotalLine(PDPageContentStream cs, String label, Number val, float y) throws IOException {
+    private static void drawTotalLine(PDPageContentStream cs, String label, Number val, float y,
+                                      float X_TOT_LABEL, float X_TOT_VAL) throws IOException {
         BR.drawText(cs, FONT_REG, FONT_H, X_TOT_LABEL, y, label);
         BR.drawText(cs, FONT_B,   FONT_H, X_TOT_VAL,   y, BR.moeda(val));
     }
 
-    private static void drawTotalBold(PDPageContentStream cs, String label, Number val, float y) throws IOException {
+    private static void drawTotalBold(PDPageContentStream cs, String label, Number val, float y,
+                                      float X_TOT_LABEL, float X_TOT_VAL) throws IOException {
         BR.drawText(cs, FONT_B,   FONT_H, X_TOT_LABEL, y, label);
         BR.drawText(cs, FONT_B,   FONT_H, X_TOT_VAL,   y, BR.moeda(val));
     }
@@ -280,15 +263,7 @@ public class StongelTemplateRenderer {
         }
     }
 
-    private static boolean hasItems(List<?> list) {
-        return list != null && !list.isEmpty();
-    }
-
-    private static String safe(String s) {
-        return (s == null || s.isBlank()) ? "-" : s;
-    }
-
-    // ======= DEBUG / Calibração =======
+    // ----------------- DEBUG / Calibração -----------------
 
     /** Grade com subgraduação (step) e linhas maiores (major). */
     private static void drawGrid(PDPageContentStream cs, PDPage page, float step, float major) throws IOException {
@@ -344,5 +319,55 @@ public class StongelTemplateRenderer {
             // label
             BR.drawText(cs, FONT_REG, 8f, x + 6, y + 2, label);
         }
+    }
+
+    // ----------------- Util -----------------
+
+    /** Lê o stongel-coords.json do classpath a cada chamada. */
+    private static JsonNode loadDynamicConfig() {
+        try (InputStream is = new ClassPathResource("templates/stongel-coords.json").getInputStream()) {
+            return new ObjectMapper().readTree(is);
+        } catch (Exception e) {
+            // fallback mínima
+            try {
+                return new ObjectMapper().readTree("{\"pageIndexes\":{\"headerTotais\":0,\"tables\":6}}");
+            } catch (IOException ex) {
+                throw new RuntimeException("Falha ao carregar stongel-coords.json", ex);
+            }
+        }
+    }
+
+    private static int getInt(JsonNode n, String path, int def) {
+        JsonNode j = at(n, path);
+        return (j != null && j.isInt()) ? j.asInt() : def;
+    }
+
+    private static float getF(JsonNode n, String path, float def) {
+        JsonNode j = at(n, path);
+        return (j != null && j.isNumber()) ? (float) j.asDouble() : def;
+    }
+
+    private static JsonNode at(JsonNode n, String path) {
+        String[] ps = path.split("\\.");
+        JsonNode cur = n;
+        for (String p : ps) {
+            if (cur == null) return null;
+            cur = cur.get(p);
+        }
+        return cur;
+    }
+
+    private static float getSysF(String prop, float def) {
+        String v = System.getProperty(prop);
+        if (v == null || v.isBlank()) return def;
+        try { return Float.parseFloat(v); } catch (Exception e) { return def; }
+    }
+
+    private static boolean hasItems(List<?> list) {
+        return list != null && !list.isEmpty();
+    }
+
+    private static String safe(String s) {
+        return (s == null || s.isBlank()) ? "-" : s;
     }
 }

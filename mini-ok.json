@@ -2,10 +2,10 @@
   "empresa": {
     "razaoSocial": "STONGEL REVESTIMENTOS LTDA",
     "cnpj": "12.345.678/0001-90",
+    "contato": "John Doe",
     "telefone": "(51) 99999-0000",
     "email": "contato@stongel.com.br"
   },
-  "obra": "Rua X, 123, Bairro Y, Cidade/UF - CEP 90000-000",
   "materiais": [
     {
       "descricao": "STG 905 - Verniz Epóxi 7,00 KG (A+B)",

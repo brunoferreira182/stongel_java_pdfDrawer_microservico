@@ -4,17 +4,12 @@
     "tables": 6
   },
   "empresa": {
-    "x": 60,
-    "yRazao": 240,
+    "x": 120,
+    "yRazao": 175,
     "yCnpj": 225,
+    "yContato": 215,
     "yTel": 210,
     "yEmail": 195
-  },
-  "obra": {
-    "xLabel": 60,
-    "xVal": 100,
-    "y": 100,
-    "maxW": 460
   },
   "tabelas": {
     "cols": {
@@ -46,10 +41,11 @@
   },
   "probes": {
     "page1": [
-      { "x": 60,  "y": 140, "label": "RazãoSocial" },
-      { "x": 60,  "y": 125, "label": "CNPJ" },
-      { "x": 60,  "y": 110, "label": "Tel" },
-      { "x": 60,  "y": 195, "label": "Email" },
+      { "x": 60,  "y": 175, "label": "Razão Social:" },
+      { "x": 60,  "y": 135, "label": "CNPJ" },
+      { "x": 60,  "y": 120, "label": "Contato" },
+      { "x": 60,  "y": 105, "label": "Telefone" },
+      { "x": 60,  "y": 80, "label": "Email" },
       { "x": 420, "y": 200, "label": "Totais-Label" },
       { "x": 560, "y": 200, "label": "Totais-Valor" }
     ],
