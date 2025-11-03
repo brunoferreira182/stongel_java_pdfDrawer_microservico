@@ -1,15 +1,11 @@
 {
-  "pageIndexes": {
-    "headerTotais": 0,
-    "tables": 6
-  },
+  "pageIndexes": { "headerTotais": 0, "tables": 6 },
   "empresa": {
-    "x": 120,
-    "yRazao": 175,
-    "yCnpj": 155,
-    "yContato": 135,
-    "yTel": 115,
-    "yEmail": 95
+    "razao":   { "x": 120, "y": 175 },
+    "cnpj":    { "x": 95, "y": 155 },
+    "contato": { "x": 100, "y": 135 },
+    "tel":     { "x": 100, "y": 115 },
+    "email":   { "x": 100, "y": 95  }
   },
   "tabelas": {
     "cols": {
