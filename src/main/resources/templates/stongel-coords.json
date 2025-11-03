@@ -29,11 +29,22 @@
       "yMin": 190
     }
   },
-  "totais": {
+  "totaisTables": {
     "xLabel": 420,
-    "xVal": 560,
-    "yTop": 200,
-    "step": 16
+    "xVal":   560,
+    "yTop":   200,
+    "step":    16,
+
+    "valDx":   0,
+    "valDy":   0,
+
+    "ajustesIndividuais": {
+      "subtotal":        { "dx": -100,  "dy": 0  },
+      "desconto":        { "dx": 0,  "dy": -4 },
+      "totalMateriais":  { "dx": -100,  "dy": 270 },
+      "totalServicos":   { "dx": -100,  "dy": 100 },
+      "totalGeral":      { "dx": -100,  "dy": 100  }
+    }
   },
   "probes": {
     "page1": [
@@ -41,28 +52,10 @@
       { "x": 60,  "y": 155, "label": "CNPJ:" },
       { "x": 60,  "y": 135, "label": "Contato:" },
       { "x": 60,  "y": 115, "label": "Telefone:" },
-      { "x": 60,  "y": 95, "label": "E-mail:" },
-      { "x": 420, "y": 200, "label": "Totais-Label" },
-      { "x": 560, "y": 200, "label": "Totais-Valor" }
+      { "x": 60,  "y": 95, "label": "E-mail:" }
     ],
     "pageTables": [
-      { "x": 60,  "y": 598, "label": "DESC-MAT" },
-      { "x": 300, "y": 598, "label": "COMP-MAT" },
-      { "x": 340, "y": 598, "label": "UN-MAT" },
-      { "x": 380, "y": 598, "label": "QTD-MAT" },
-      { "x": 420, "y": 598, "label": "CUSTO-MAT" },
-      { "x": 470, "y": 598, "label": "PRECO-MAT" },
-      { "x": 530, "y": 598, "label": "DESC%-MAT" },
-      { "x": 585, "y": 598, "label": "PRECO/KG-MAT" },
 
-      { "x": 60,  "y": 328, "label": "DESC-SRV" },
-      { "x": 300, "y": 328, "label": "COMP-SRV" },
-      { "x": 340, "y": 328, "label": "UN-SRV" },
-      { "x": 380, "y": 328, "label": "QTD-SRV" },
-      { "x": 420, "y": 328, "label": "CUSTO-SRV" },
-      { "x": 470, "y": 328, "label": "PRECO-SRV" },
-      { "x": 530, "y": 328, "label": "DESC%-SRV" },
-      { "x": 585, "y": 328, "label": "PRECO/KG-SRV" }
     ]
   }
 }
