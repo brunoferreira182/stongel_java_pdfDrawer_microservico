@@ -1,43 +1,47 @@
 {
   "pageIndexes": { "headerTotais": 0, "tables": 6 },
+
   "empresa": {
     "razao":   { "x": 120, "y": 175 },
-    "cnpj":    { "x": 95, "y": 155 },
+    "cnpj":    { "x": 95,  "y": 155 },
     "contato": { "x": 100, "y": 135 },
     "tel":     { "x": 100, "y": 115 },
     "email":   { "x": 100, "y": 95  }
   },
-  "tabelas": {
-    "cols": {
-      "desc": 60,
-      "comp": 300,
-      "un": 340,
-      "qtd": 380,
-      "custo": 420,
-      "preco": 470,
-      "descLim": 530,
-      "precoKg": 585
-    },
+
+  "layout": {
     "materiais": {
-      "yFirst": 598,
+      "xQtdRight": 65,
+      "xUn": 105,
+      "xDesc": 200,
+      "descMaxWidth": 360,
+      "xSubtotalRight": 510,
+
+      "yFirst": 555,
       "rowStep": 16,
       "yMin": 380
     },
     "servicos": {
+      "xQtdRight": 120,
+      "xUn": 160,
+      "xDesc": 200,
+      "descMaxWidth": 340,
+      "xCustoUnitRight": 470,
+      "xSubtotalRight": 585,
+
       "yFirst": 328,
       "rowStep": 16,
       "yMin": 190
     }
   },
+
   "totaisTables": {
     "xLabel": 420,
     "xVal":   560,
     "yTop":   200,
     "step":    16,
-
     "valDx":   0,
     "valDy":   0,
-
     "ajustesIndividuais": {
       "subtotal":        { "dx": -100,  "dy": 0  },
       "desconto":        { "dx": 0,  "dy": -4 },
@@ -45,17 +49,5 @@
       "totalServicos":   { "dx": -100,  "dy": 100 },
       "totalGeral":      { "dx": -100,  "dy": 100  }
     }
-  },
-  "probes": {
-    "page1": [
-      { "x": 60,  "y": 175, "label": "Razão Social:" },
-      { "x": 60,  "y": 155, "label": "CNPJ:" },
-      { "x": 60,  "y": 135, "label": "Contato:" },
-      { "x": 60,  "y": 115, "label": "Telefone:" },
-      { "x": 60,  "y": 95, "label": "E-mail:" }
-    ],
-    "pageTables": [
-
-    ]
   }
 }
