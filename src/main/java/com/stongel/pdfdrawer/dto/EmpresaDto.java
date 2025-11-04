@@ -1,10 +1,11 @@
 package com.stongel.pdfdrawer.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EmpresaDto {
+
     @JsonAlias({"razaoSocial","razao_social","nomeEmpresa","nome"})
     private String razaoSocial;
 
