@@ -11,25 +11,29 @@
 
   "layout": {
     "materiais": {
-      "xQtdRight": 65,
+      "xQtdRight": 55,
       "xUn": 105,
       "xDesc": 200,
       "descMaxWidth": 360,
       "xSubtotalRight": 510,
+      "descDx":  -30,
+      "descDy":  0,
 
       "yFirst": 555,
       "rowStep": 16,
       "yMin": 380
     },
     "servicos": {
-      "xQtdRight": 120,
-      "xUn": 160,
+      "xQtdRight": 55,
+      "xUn": 105,
       "xDesc": 200,
       "descMaxWidth": 340,
       "xCustoUnitRight": 470,
-      "xSubtotalRight": 585,
+      "xSubtotalRight": 565,
+      "descDx":  -30,
+      "descDy":  0,
 
-      "yFirst": 328,
+      "yFirst": 380,
       "rowStep": 16,
       "yMin": 190
     }

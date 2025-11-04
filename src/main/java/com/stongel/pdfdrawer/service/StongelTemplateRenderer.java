@@ -65,7 +65,7 @@ public class StongelTemplateRenderer {
       float Y_OBRA            = getF(cfg, "obra.y",      665f);
       float OBRA_MAX_W        = getF(cfg, "obra.maxW",   460f);
 
-      // -------- Página 1 – labels (novos; usam labels.page1.* ou defaults do seu probe) --------
+      // -------- Página 1 – labels (explícitos) --------
       float L_RAZAO_X = getF(cfg, "labels.page1.razao.x", 60f);
       float L_RAZAO_Y = getF(cfg, "labels.page1.razao.y", 175f);
       float L_CNPJ_X  = getF(cfg, "labels.page1.cnpj.x",  60f);
@@ -79,7 +79,7 @@ public class StongelTemplateRenderer {
       float L_OBRA_X  = getF(cfg, "labels.page1.obra.x",  X_OBRA_LABEL_FALL);
       float L_OBRA_Y  = getF(cfg, "labels.page1.obra.y",  Y_OBRA);
 
-      // -------- Totais (fallback do JSON antigo) --------
+      // -------- Totais (fallback antigo) --------
       float X_TOT_LABEL_FALLBACK = getF(cfg, "totais.xLabel", 420f);
       float X_TOT_VAL_FALLBACK   = getF(cfg, "totais.xVal",   560f);
       float Y_TOT_TOP_FALLBACK   = getF(cfg, "totais.yTop",   200f);
@@ -103,34 +103,40 @@ public class StongelTemplateRenderer {
 
       // -------- NOVO layout (como no print) --------
       JsonNode L_MAT = at(cfg, "layout.materiais");
-      float MAT_QTD_RIGHT   = getF(L_MAT, "xQtdRight", 120f);
-      float MAT_UN_X        = getF(L_MAT, "xUn",       160f);
-      float MAT_DESC_X      = getF(L_MAT, "xDesc",     200f);
-      float MAT_DESC_MAXW   = getF(L_MAT, "descMaxWidth", 360f);
-      float MAT_SUBT_RIGHT  = getF(L_MAT, "xSubtotalRight", 585f);
-      float MAT_Y_FIRST     = getF(L_MAT, "yFirst",    Y_MAT_FIRSTLINE_OLD);
-      float MAT_Y_MIN       = getF(L_MAT, "yMin",      Y_MIN_MAT_OLD);
-      float MAT_ROW_STEP    = getF(L_MAT, "rowStep",   Y_ROW_STEP_OLD);
+      float MAT_QTD_RIGHT     = getF(L_MAT, "xQtdRight", 55f);
+      float MAT_UN_X          = getF(L_MAT, "xUn",       105f);
+      float MAT_DESC_X        = getF(L_MAT, "xDesc",     200f);
+      float MAT_DESC_MAXW     = getF(L_MAT, "descMaxWidth", 360f);
+      float MAT_SUBT_RIGHT    = getF(L_MAT, "xSubtotalRight", 510f);
+      float MAT_Y_FIRST       = getF(L_MAT, "yFirst",    555f);
+      float MAT_Y_MIN         = getF(L_MAT, "yMin",      380f);
+      float MAT_ROW_STEP      = getF(L_MAT, "rowStep",   16f);
+      // >>> offsets SÓ da descrição de Materiais <<<
+      float MAT_DESC_DX       = getF(L_MAT, "descDx",    0f);
+      float MAT_DESC_DY       = getF(L_MAT, "descDy",    0f);
 
       JsonNode L_SRV = at(cfg, "layout.servicos");
-      float SRV_QTD_RIGHT   = getF(L_SRV, "xQtdRight", 120f);
-      float SRV_UN_X        = getF(L_SRV, "xUn",       160f);
-      float SRV_DESC_X      = getF(L_SRV, "xDesc",     200f);
-      float SRV_DESC_MAXW   = getF(L_SRV, "descMaxWidth", 340f);
+      float SRV_QTD_RIGHT     = getF(L_SRV, "xQtdRight", 55f);
+      float SRV_UN_X          = getF(L_SRV, "xUn",       105f);
+      float SRV_DESC_X        = getF(L_SRV, "xDesc",     200f);
+      float SRV_DESC_MAXW     = getF(L_SRV, "descMaxWidth", 340f);
       float SRV_CUSTO_U_RIGHT = getF(L_SRV, "xCustoUnitRight", 470f);
-      float SRV_SUBT_RIGHT  = getF(L_SRV, "xSubtotalRight",    585f);
-      float SRV_Y_FIRST     = getF(L_SRV, "yFirst",    Y_SRV_FIRSTLINE_OLD);
-      float SRV_Y_MIN       = getF(L_SRV, "yMin",      Y_MIN_SRV_OLD);
-      float SRV_ROW_STEP    = getF(L_SRV, "rowStep",   Y_ROW_STEP_OLD);
+      float SRV_SUBT_RIGHT    = getF(L_SRV, "xSubtotalRight",   565f);
+      float SRV_Y_FIRST       = getF(L_SRV, "yFirst",    380f);
+      float SRV_Y_MIN         = getF(L_SRV, "yMin",      190f);
+      float SRV_ROW_STEP      = getF(L_SRV, "rowStep",   16f);
+      // >>> offsets SÓ da descrição de Serviços (opcional) <<<
+      float SRV_DESC_DX       = getF(L_SRV, "descDx",    0f);
+      float SRV_DESC_DY       = getF(L_SRV, "descDy",    0f);
 
       // -------- Totais (página 7) --------
       float X_TOT_TAB_LABEL = getF(cfg, "totaisTables.xLabel", X_TOT_LABEL_FALLBACK);
       float X_TOT_TAB_VAL   = getF(cfg, "totaisTables.xVal",   X_TOT_VAL_FALLBACK);
       float Y_TOT_TAB_TOP   = getF(cfg, "totaisTables.yTop",   Y_TOT_TOP_FALLBACK);
       float Y_TOT_TAB_STEP  = getF(cfg, "totaisTables.step",   Y_TOT_STEP_FALLBACK);
-      float VAL_DX          = getF(cfg, "totaisTables.valDx",  0f);   // offsets globais (valores)
+      float VAL_DX          = getF(cfg, "totaisTables.valDx",  0f);
       float VAL_DY          = getF(cfg, "totaisTables.valDy",  0f);
-      JsonNode AJUSTES_INDIVIDUAIS = at(cfg, "totaisTables.ajustesIndividuais"); // mantém como você deixou
+      JsonNode AJUSTES_INDIVIDUAIS = at(cfg, "totaisTables.ajustesIndividuais");
 
       // --- Flags de GRID ---
       boolean debugGrid = "1".equals(System.getProperty("pdf.grid"))
@@ -150,7 +156,7 @@ public class StongelTemplateRenderer {
                   drawProbes(cs, cfg.path("probes").path("page1"));
               }
 
-              // LABELS (explícitos)
+              // LABELS
               BR.drawText(cs, FONT_REG, FONT_H, L_RAZAO_X, L_RAZAO_Y, "Razão Social:");
               BR.drawText(cs, FONT_REG, FONT_H, L_CNPJ_X,  L_CNPJ_Y,  "CNPJ:");
               BR.drawText(cs, FONT_REG, FONT_H, L_CONT_X,  L_CONT_Y,  "Contato:");
@@ -182,20 +188,26 @@ public class StongelTemplateRenderer {
               boolean hasNewLayout = (L_MAT != null && !L_MAT.isMissingNode()) || (L_SRV != null && !L_SRV.isMissingNode());
 
               if (hasNewLayout) {
-                  // === Layout do print ===
                   if (hasItems(dto.getMateriais())) {
                       drawMaterialsRowsV2(cs, dto.getMateriais(),
                               MAT_Y_FIRST, MAT_ROW_STEP, MAT_Y_MIN,
-                              MAT_QTD_RIGHT, MAT_UN_X, MAT_DESC_X, MAT_DESC_MAXW, MAT_SUBT_RIGHT);
+                              MAT_QTD_RIGHT, MAT_UN_X,
+                              MAT_DESC_X + MAT_DESC_DX, MAT_DESC_MAXW, // X com offset
+                              MAT_SUBT_RIGHT,
+                              MAT_DESC_DY // Y da descrição (offset)
+                      );
                   }
                   if (hasItems(dto.getServicos())) {
                       drawServicesRowsV2(cs, dto.getServicos(),
                               SRV_Y_FIRST, SRV_ROW_STEP, SRV_Y_MIN,
-                              SRV_QTD_RIGHT, SRV_UN_X, SRV_DESC_X, SRV_DESC_MAXW,
-                              SRV_CUSTO_U_RIGHT, SRV_SUBT_RIGHT);
+                              SRV_QTD_RIGHT, SRV_UN_X,
+                              SRV_DESC_X + SRV_DESC_DX, SRV_DESC_MAXW,
+                              SRV_CUSTO_U_RIGHT, SRV_SUBT_RIGHT,
+                              SRV_DESC_DY
+                      );
                   }
               } else {
-                  // === Fallback (layout antigo) ===
+                  // Fallback (layout antigo)
                   if (hasItems(dto.getMateriais())) {
                       drawTableRowsOld(cs, dto.getMateriais(),
                               Y_MAT_FIRSTLINE_OLD, Y_ROW_STEP_OLD, Y_MIN_MAT_OLD,
@@ -210,7 +222,7 @@ public class StongelTemplateRenderer {
                   }
               }
 
-              // Totais (mantém ajustesIndividuais exatamente como no seu JSON)
+              // Totais (mantém ajustesIndividuais)
               drawTotals(cs, dto.getTotais(),
                       X_TOT_TAB_LABEL, X_TOT_TAB_VAL,
                       Y_TOT_TAB_TOP, Y_TOT_TAB_STEP,
@@ -228,7 +240,6 @@ public class StongelTemplateRenderer {
 
   // ----------------- Helpers de desenho -----------------
 
-  /** Normaliza a origem (0,0) para a CropBox da página. */
   private static void normalizeToCropBox(PDPageContentStream cs, PDPage page) throws IOException {
       PDRectangle crop = page.getCropBox();
       if (crop != null) {
@@ -236,13 +247,15 @@ public class StongelTemplateRenderer {
       }
   }
 
-  /** Layout NOVO – Materiais: Qtde | Unidade | Produto | Subtotal(R$) */
+  /** Layout NOVO – Materiais */
   private static void drawMaterialsRowsV2(
           PDPageContentStream cs,
           List<ItemDto> itens,
           float yStart, float rowStep, float yMin,
-          float xQtdRight, float xUn, float xDesc, float descMaxWidth,
-          float xSubtotalRight
+          float xQtdRight, float xUn,
+          float xDesc, float descMaxWidth,
+          float xSubtotalRight,
+          float descDy
   ) throws IOException {
       float y = yStart;
       for (ItemDto it : itens) {
@@ -250,26 +263,27 @@ public class StongelTemplateRenderer {
 
           drawRightAligned(cs, FONT_REG, FONT_H, xQtdRight, y, BR.numero(it.getQuantidade())); // Qtde
           BR.drawText(cs, FONT_REG, FONT_H, xUn, y, safe(it.getUnidade()));                    // Unidade
-          drawWrapped(cs, FONT_REG, FONT_H, xDesc, y, descMaxWidth, safe(it.getDescricao()), 10f); // Produto
-
+          drawWrapped(cs, FONT_REG, FONT_H, xDesc, y + descDy, descMaxWidth, safe(it.getDescricao()), 10f); // Descrição (X/Y ajustáveis)
           double subtotal = (it.getPrecoVenda() != null && it.getPrecoVenda().doubleValue() > 0)
                   ? it.getPrecoVenda().doubleValue()
                   : ((it.getCusto() != null && it.getQuantidade() != null)
                         ? it.getCusto().doubleValue() * it.getQuantidade().doubleValue()
                         : 0.0);
-          drawRightAligned(cs, FONT_REG, FONT_H, xSubtotalRight, y, BR.moeda(subtotal)); // Subtotal
+          drawRightAligned(cs, FONT_REG, FONT_H, xSubtotalRight, y, BR.moeda(subtotal));       // Subtotal
 
           y -= rowStep;
       }
   }
 
-  /** Layout NOVO – Serviços: Qtde | Unidade | Serviço | Custo Unitário | Subtotal(R$) */
+  /** Layout NOVO – Serviços */
   private static void drawServicesRowsV2(
           PDPageContentStream cs,
           List<ItemDto> itens,
           float yStart, float rowStep, float yMin,
-          float xQtdRight, float xUn, float xDesc, float descMaxWidth,
-          float xCustoUnitRight, float xSubtotalRight
+          float xQtdRight, float xUn,
+          float xDesc, float descMaxWidth,
+          float xCustoUnitRight, float xSubtotalRight,
+          float descDy
   ) throws IOException {
       float y = yStart;
       for (ItemDto it : itens) {
@@ -277,8 +291,7 @@ public class StongelTemplateRenderer {
 
           drawRightAligned(cs, FONT_REG, FONT_H, xQtdRight, y, BR.numero(it.getQuantidade())); // Qtde
           BR.drawText(cs, FONT_REG, FONT_H, xUn, y, safe(it.getUnidade()));                    // Unidade
-          drawWrapped(cs, FONT_REG, FONT_H, xDesc, y, descMaxWidth, safe(it.getDescricao()), 10f); // Serviço
-
+          drawWrapped(cs, FONT_REG, FONT_H, xDesc, y + descDy, descMaxWidth, safe(it.getDescricao()), 10f); // Serviço (X/Y ajustáveis)
           double custoU = 0.0;
           if (it.getPrecoVenda() != null && it.getQuantidade() != null && it.getQuantidade().doubleValue() > 0) {
               custoU = it.getPrecoVenda().doubleValue() / it.getQuantidade().doubleValue();
@@ -286,7 +299,6 @@ public class StongelTemplateRenderer {
               custoU = it.getCusto().doubleValue() / it.getQuantidade().doubleValue();
           }
           drawRightAligned(cs, FONT_REG, FONT_H, xCustoUnitRight, y, BR.moeda(custoU));       // Custo Unit.
-
           double subtotal = (it.getPrecoVenda() != null && it.getPrecoVenda().doubleValue() > 0)
                   ? it.getPrecoVenda().doubleValue()
                   : ((it.getCusto() != null && it.getQuantidade() != null)
@@ -306,7 +318,6 @@ public class StongelTemplateRenderer {
           float xDesc, float xComp, float xUn, float xQtd,
           float xCusto, float xPreco, float xDescLim, float xPrecoKg
   ) throws IOException {
-
       float y = yStart;
       for (ItemDto it : itens) {
           if (y < yMin) break;
@@ -324,7 +335,6 @@ public class StongelTemplateRenderer {
       }
   }
 
-  /** Texto alinhado à direita, usando xRight como borda direita. */
   private static void drawRightAligned(PDPageContentStream cs, PDFont font, float fontSize,
                                        float xRight, float y, String text) throws IOException {
       if (text == null) text = "-";
@@ -332,7 +342,6 @@ public class StongelTemplateRenderer {
       BR.drawText(cs, font, fontSize, xRight - w, y, text);
   }
 
-  /** Texto com quebra automática até largura máxima. */
   private static void drawWrapped(PDPageContentStream cs, PDFont font, float fontSize,
                                   float x, float y, float maxWidth,
                                   String text, float lineStep) throws IOException {
@@ -356,7 +365,6 @@ public class StongelTemplateRenderer {
       }
   }
 
-  /** Parágrafo com quebra automática (página 1: Obra). */
   private static void drawParagraph(PDPageContentStream cs, PDFont font, float fontSize,
                                     float x, float y, float maxWidth,
                                     String text, float lineStep) throws IOException {
@@ -367,7 +375,6 @@ public class StongelTemplateRenderer {
       String[] words = text.split("\\s+");
       String line = "";
       float cursorY = y;
-
       for (String w : words) {
           String probe = line.isEmpty() ? w : line + " " + w;
           float width = font.getStringWidth(probe) / 1000f * fontSize;
@@ -384,7 +391,6 @@ public class StongelTemplateRenderer {
       }
   }
 
-  /** Totais (página 7): offsets globais e individuais de valores (mantidos). */
   private static void drawTotals(PDPageContentStream cs, TotaisDto t,
                                  float X_TOT_LABEL, float X_TOT_VAL,
                                  float Y_TOT_TOP, float Y_TOT_STEP,
