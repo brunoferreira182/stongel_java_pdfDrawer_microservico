@@ -9,6 +9,15 @@
     "email":   { "x": 100, "y": 95  }
   },
 
+  "labels": {
+    "page1": {
+      "razao":    { "x": 60, "y": 175 },
+      "cnpj":     { "x": 60, "y": 155 },
+      "contato":  { "x": 60, "y": 135 },
+      "telefone": { "x": 60, "y": 115 },
+      "email":    { "x": 60, "y": 95  }
+    }
+  },
 
   "layout": {
     "materiais": {
@@ -55,23 +64,18 @@
   },
 
   "sections": {
-
-
     "apresentacao-da-empresa":                      { "page": 1,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
     "1-informacoes-do-sistema":                     { "page": 2,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
     "2-preparo-de-superficie":                      { "page": 3,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
     "3-aplicacao-do-sistema":                       { "page": 4,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
 
-
-
     "4-notas-importantes":                          { "page": 6,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
-    "5-mobilizacao-agendamento-e-execucao-da-obra": { "page": 7,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+    "5-mobilizacao-agendamento-e-execucao-da-obra": { "page": 6,  "x": 60, "y": 480, "maxW": 480, "lineStep": 12, "fontSize": 10 },
 
     "6-responsabilidade-da-contratante":            { "page": 8,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
 
-
-    "7-responsabilidade-da-contratada":             { "page": 9, "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
-    "8-condicoes-do-substrato":                     { "page": 9, "x": 60, "y": 480, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+    "7-responsabilidade-da-contratada":             { "page": 9,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+    "8-condicoes-do-substrato":                     { "page": 9,  "x": 60, "y": 480, "maxW": 480, "lineStep": 12, "fontSize": 10 },
 
     "9-termos-de-garantia":                         { "page": 10, "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
 
