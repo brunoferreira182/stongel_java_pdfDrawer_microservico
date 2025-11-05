@@ -31,73 +31,63 @@ import java.util.*;
 public class StongelTemplateRenderer {
 
   // Tipografia
-  private static final PDFont FONT_REG = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-  private static final float  FONT_H   = 10f;
+  private static final PDFont FONT_REG  = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+  private static final PDFont FONT_BOLD = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+  private static final float  FONT_H    = 10f;
 
   private final ObjectMapper om = new ObjectMapper();
-
-  /* ===========================
-     ENTRADA 1: JSON REAL
-     =========================== */
 
   /** Recebe o JSON real do orçamento e renderiza o PDF. */
   public byte[] renderFromOrcamentoJson(String json) throws Exception {
       JsonNode root = om.readTree(json);
       BudgetDto dto = mapRealJsonToBudgetDto(root);
-      return renderFromTemplate(dto);
+      JsonNode cfg = loadDynamicConfig();
+      return renderCore(dto, root, cfg);
   }
 
-  /* ===========================
-     ENTRADA 2: DTO ANTIGO
-     =========================== */
-
+  /** Render antigo por DTO (sem as seções). */
   public byte[] renderFromTemplate(BudgetDto dto) throws Exception {
+      JsonNode cfg = loadDynamicConfig();
+      return renderCore(dto, null, cfg);
+  }
 
-      // --- Carrega template ---
+  /* =========================== CORE =========================== */
+  private byte[] renderCore(BudgetDto dto, JsonNode rawJson, JsonNode cfg) throws Exception {
+
+      // Carrega template
       byte[] templateBytes;
       try (InputStream is = new ClassPathResource("templates/STONGEL - PDF.pdf").getInputStream()) {
           templateBytes = is.readAllBytes();
       }
 
-      // --- Carrega coordenadas JSON (reload a cada chamada) ---
-      JsonNode cfg = loadDynamicConfig();
-
-      // Páginas (0-based)
+      // Índices de páginas (0-based)
       int PAGE_IDX_HEADER_TOTAIS = getInt(cfg, "pageIndexes.headerTotais", 0);
       int PAGE_IDX_TABELAS       = getInt(cfg, "pageIndexes.tables", 6);
 
-      // -------- Empresa / Obra (página 1) – valores --------
-      float X_EMP_RAZAO = getF(cfg, "empresa.razao.x", 120f);
-      float Y_EMP_RAZAO = getF(cfg, "empresa.razao.y", 175f);
-      float X_EMP_CNPJ  = getF(cfg, "empresa.cnpj.x", 95f);
-      float Y_EMP_CNPJ  = getF(cfg, "empresa.cnpj.y", 155f);
-      float X_EMP_CONT  = getF(cfg, "empresa.contato.x", 100f);
-      float Y_EMP_CONT  = getF(cfg, "empresa.contato.y", 135f);
-      float X_EMP_TEL   = getF(cfg, "empresa.tel.x", 100f);
-      float Y_EMP_TEL   = getF(cfg, "empresa.tel.y", 115f);
-      float X_EMP_EMAIL = getF(cfg, "empresa.email.x", 100f);
-      float Y_EMP_EMAIL = getF(cfg, "empresa.email.y", 95f);
+      // -------- Empresa / Página 1 (valores ficam off-screen por padrão) --------
+      float X_EMP_RAZAO = getF(cfg, "empresa.razao.x", -10000f);
+      float Y_EMP_RAZAO = getF(cfg, "empresa.razao.y", -10000f);
+      float X_EMP_CNPJ  = getF(cfg, "empresa.cnpj.x",  -10000f);
+      float Y_EMP_CNPJ  = getF(cfg, "empresa.cnpj.y",  -10000f);
+      float X_EMP_CONT  = getF(cfg, "empresa.contato.x", -10000f);
+      float Y_EMP_CONT  = getF(cfg, "empresa.contato.y", -10000f);
+      float X_EMP_TEL   = getF(cfg, "empresa.tel.x",   -10000f);
+      float Y_EMP_TEL   = getF(cfg, "empresa.tel.y",   -10000f);
+      float X_EMP_EMAIL = getF(cfg, "empresa.email.x", -10000f);
+      float Y_EMP_EMAIL = getF(cfg, "empresa.email.y", -10000f);
 
-      // float X_OBRA_LABEL_FALL = getF(cfg, "obra.xLabel", 60f);
-      // float X_OBRA_VAL        = getF(cfg, "obra.xVal",   100f);
-      // float Y_OBRA            = getF(cfg, "obra.y",      665f);
-      // float OBRA_MAX_W        = getF(cfg, "obra.maxW",   460f);
+      float L_RAZAO_X = getF(cfg, "labels.page1.razao.x",    -10000f);
+      float L_RAZAO_Y = getF(cfg, "labels.page1.razao.y",    -10000f);
+      float L_CNPJ_X  = getF(cfg, "labels.page1.cnpj.x",     -10000f);
+      float L_CNPJ_Y  = getF(cfg, "labels.page1.cnpj.y",     -10000f);
+      float L_CONT_X  = getF(cfg, "labels.page1.contato.x",  -10000f);
+      float L_CONT_Y  = getF(cfg, "labels.page1.contato.y",  -10000f);
+      float L_TEL_X   = getF(cfg, "labels.page1.telefone.x", -10000f);
+      float L_TEL_Y   = getF(cfg, "labels.page1.telefone.y", -10000f);
+      float L_MAIL_X  = getF(cfg, "labels.page1.email.x",    -10000f);
+      float L_MAIL_Y  = getF(cfg, "labels.page1.email.y",    -10000f);
 
-      // -------- Página 1 – labels (explícitos) --------
-      float L_RAZAO_X = getF(cfg, "labels.page1.razao.x", 60f);
-      float L_RAZAO_Y = getF(cfg, "labels.page1.razao.y", 175f);
-      float L_CNPJ_X  = getF(cfg, "labels.page1.cnpj.x",  60f);
-      float L_CNPJ_Y  = getF(cfg, "labels.page1.cnpj.y",  155f);
-      float L_CONT_X  = getF(cfg, "labels.page1.contato.x",60f);
-      float L_CONT_Y  = getF(cfg, "labels.page1.contato.y",135f);
-      float L_TEL_X   = getF(cfg, "labels.page1.telefone.x",60f);
-      float L_TEL_Y   = getF(cfg, "labels.page1.telefone.y",115f);
-      float L_MAIL_X  = getF(cfg, "labels.page1.email.x", 60f);
-      float L_MAIL_Y  = getF(cfg, "labels.page1.email.y", 95f);
-      // float L_OBRA_X  = getF(cfg, "labels.page1.obra.x",  X_OBRA_LABEL_FALL);
-      // float L_OBRA_Y  = getF(cfg, "labels.page1.obra.y",  Y_OBRA);
-
-      // -------- Layout ANTIGO (fallback) --------
+      // -------- Layout antigo (fallback) --------
       float X_COL_DESC_OLD     = getF(cfg, "tabelas.cols.desc", 60f);
       float X_COL_COMP_OLD     = getF(cfg, "tabelas.cols.comp", 300f);
       float X_COL_UN_OLD       = getF(cfg, "tabelas.cols.un",   340f);
@@ -113,9 +103,9 @@ public class StongelTemplateRenderer {
       float Y_MIN_MAT_OLD       = getF(cfg, "tabelas.materiais.yMin",   380f);
       float Y_MIN_SRV_OLD       = getF(cfg, "tabelas.servicos.yMin",    190f);
 
-      // -------- NOVO layout --------
+      // -------- Layout novo --------
       JsonNode L_MAT = at(cfg, "layout.materiais");
-      float MAT_QTD_RIGHT     = getF(L_MAT, "xQtdRight", 55f);
+      float MAT_QTD_RIGHT     = getF(L_MAT, "xQtdRight", 65f);
       float MAT_UN_X          = getF(L_MAT, "xUn",       105f);
       float MAT_DESC_X        = getF(L_MAT, "xDesc",     200f);
       float MAT_DESC_MAXW     = getF(L_MAT, "descMaxWidth", 360f);
@@ -127,7 +117,7 @@ public class StongelTemplateRenderer {
       float MAT_DESC_DY       = getF(L_MAT, "descDy",    0f);
 
       JsonNode L_SRV = at(cfg, "layout.servicos");
-      float SRV_QTD_RIGHT     = getF(L_SRV, "xQtdRight", 55f);
+      float SRV_QTD_RIGHT     = getF(L_SRV, "xQtdRight", 65f);
       float SRV_UN_X          = getF(L_SRV, "xUn",       105f);
       float SRV_DESC_X        = getF(L_SRV, "xDesc",     200f);
       float SRV_DESC_MAXW     = getF(L_SRV, "descMaxWidth", 340f);
@@ -139,17 +129,16 @@ public class StongelTemplateRenderer {
       float SRV_DESC_DX       = getF(L_SRV, "descDx",    -30f);
       float SRV_DESC_DY       = getF(L_SRV, "descDy",    0f);
 
-      // -------- Totais (página 7) --------
-      JsonNode TABS           = at(cfg, "totaisTables");
-      float X_TOT_TAB_LABEL   = getF(cfg, "totaisTables.xLabel", 420f);
-      float X_TOT_TAB_VAL     = getF(cfg, "totaisTables.xVal",   560f);
-      float Y_TOT_TAB_TOP     = getF(cfg, "totaisTables.yTop",   200f);
-      float Y_TOT_TAB_STEP    = getF(cfg, "totaisTables.step",   16f);
-      float VAL_DX            = getF(cfg, "totaisTables.valDx",  0f);
-      float VAL_DY            = getF(cfg, "totaisTables.valDy",  0f);
-      JsonNode AJUSTES_IND    = at(cfg, "totaisTables.ajustesIndividuais");
+      // -------- Totais (página de tabelas) --------
+      float X_TOT_TAB_LABEL = getF(cfg, "totaisTables.xLabel", 420f);
+      float X_TOT_TAB_VAL   = getF(cfg, "totaisTables.xVal",   560f);
+      float Y_TOT_TAB_TOP   = getF(cfg, "totaisTables.yTop",   200f);
+      float Y_TOT_TAB_STEP  = getF(cfg, "totaisTables.step",   16f);
+      float VAL_DX          = getF(cfg, "totaisTables.valDx",  0f);
+      float VAL_DY          = getF(cfg, "totaisTables.valDy",  0f);
+      JsonNode AJUSTES_IND  = at(cfg, "totaisTables.ajustesIndividuais");
 
-      // --- Flags de GRID ---
+      // Debug grid
       boolean debugGrid = "1".equals(System.getProperty("pdf.grid"))
               || cfg.path("debug").path("grid").asBoolean(false);
       float gridStep  = getSysF("pdf.gridStep", (float) cfg.path("debug").path("gridStep").asDouble(10.0));
@@ -157,40 +146,32 @@ public class StongelTemplateRenderer {
 
       try (PDDocument doc = Loader.loadPDF(templateBytes)) {
 
-          // ===== Página 1 =====
+          // ===== Página 1 (idx 0) =====
           PDPage pageHeader = doc.getPage(PAGE_IDX_HEADER_TOTAIS);
           try (PDPageContentStream cs = new PDPageContentStream(doc, pageHeader, AppendMode.APPEND, true, true)) {
               normalizeToCropBox(cs, pageHeader);
-
               if (debugGrid) {
                   drawGrid(cs, pageHeader, gridStep, gridMajor);
                   drawProbes(cs, cfg.path("probes").path("page1"));
               }
-
-              // LABELS (fixos)
+              EmpresaDto emp = dto.getEmpresa();
+              // Labels/valores estão off-screen por padrão para não mexer na página 1
               BR.drawText(cs, FONT_REG, FONT_H, L_RAZAO_X, L_RAZAO_Y, "Razão Social:");
               BR.drawText(cs, FONT_REG, FONT_H, L_CNPJ_X,  L_CNPJ_Y,  "CNPJ:");
               BR.drawText(cs, FONT_REG, FONT_H, L_CONT_X,  L_CONT_Y,  "Contato:");
               BR.drawText(cs, FONT_REG, FONT_H, L_TEL_X,   L_TEL_Y,   "Telefone:");
               BR.drawText(cs, FONT_REG, FONT_H, L_MAIL_X,  L_MAIL_Y,  "E-mail:");
-              // BR.drawText(cs, FONT_REG, FONT_H, L_OBRA_X,  L_OBRA_Y,  "Obra:");
-
-              // VALORES
-              EmpresaDto emp = dto.getEmpresa();
               BR.drawText(cs, FONT_REG, FONT_H, X_EMP_RAZAO, Y_EMP_RAZAO, emp != null ? emp.getRazaoSocial() : "-");
               BR.drawText(cs, FONT_REG, FONT_H, X_EMP_CNPJ,  Y_EMP_CNPJ,  emp != null ? emp.getCnpj()        : "-");
               BR.drawText(cs, FONT_REG, FONT_H, X_EMP_CONT,  Y_EMP_CONT,  emp != null ? emp.getContato()     : "-");
               BR.drawText(cs, FONT_REG, FONT_H, X_EMP_TEL,   Y_EMP_TEL,   emp != null ? emp.getTelefone()    : "-");
               BR.drawText(cs, FONT_REG, FONT_H, X_EMP_EMAIL, Y_EMP_EMAIL, emp != null ? emp.getEmail()       : "-");
-
-              // drawParagraph(cs, FONT_REG, FONT_H, X_OBRA_VAL, Y_OBRA, OBRA_MAX_W, safe(dto.getObra()), 12f);
           }
 
-          // ===== Página 7 =====
+          // ===== Página de Tabelas (idx tables) =====
           PDPage pageTab = doc.getPage(PAGE_IDX_TABELAS);
           try (PDPageContentStream cs = new PDPageContentStream(doc, pageTab, AppendMode.APPEND, true, true)) {
               normalizeToCropBox(cs, pageTab);
-
               if (debugGrid) {
                   drawGrid(cs, pageTab, gridStep, gridMajor);
                   drawProbes(cs, cfg.path("probes").path("pageTables"));
@@ -218,7 +199,6 @@ public class StongelTemplateRenderer {
                       );
                   }
               } else {
-                  // Fallback (layout antigo)
                   if (hasItems(dto.getMateriais())) {
                       drawTableRowsOld(cs, dto.getMateriais(),
                               Y_MAT_FIRSTLINE_OLD, Y_ROW_STEP_OLD, Y_MIN_MAT_OLD,
@@ -233,12 +213,16 @@ public class StongelTemplateRenderer {
                   }
               }
 
-              // -------- Totais: aplicar dx/dy SOMENTE no VALOR --------
               drawTotalsValuesOnlyAdjusted(cs, dto.getTotais(),
                       X_TOT_TAB_LABEL, X_TOT_TAB_VAL,
                       Y_TOT_TAB_TOP, Y_TOT_TAB_STEP,
                       VAL_DX, VAL_DY,
-                      AJUSTES_IND, TABS);
+                      AJUSTES_IND, at(cfg, "totaisTables"));
+          }
+
+          // ===== Demais páginas: SEÇÕES (JSON bruto) =====
+          if (rawJson != null) {
+              renderSections(doc, rawJson, cfg, PAGE_IDX_HEADER_TOTAIS, PAGE_IDX_TABELAS, debugGrid, gridStep, gridMajor);
           }
 
           // Exporta
@@ -249,7 +233,7 @@ public class StongelTemplateRenderer {
       }
   }
 
-  // ----------------- Helpers de desenho -----------------
+  /* ----------------- Helpers de desenho ----------------- */
 
   private static void normalizeToCropBox(PDPageContentStream cs, PDPage page) throws IOException {
       PDRectangle crop = page.getCropBox();
@@ -258,86 +242,63 @@ public class StongelTemplateRenderer {
       }
   }
 
-  /** Layout NOVO – Materiais */
-  private static void drawMaterialsRowsV2(
-          PDPageContentStream cs,
-          java.util.List<ItemDto> itens,
+  private static void drawMaterialsRowsV2(PDPageContentStream cs, List<ItemDto> itens,
           float yStart, float rowStep, float yMin,
-          float xQtdRight, float xUn,
-          float xDesc, float descMaxWidth,
-          float xSubtotalRight,
-          float descDy
-  ) throws IOException {
+          float xQtdRight, float xUn, float xDesc, float descMaxWidth,
+          float xSubtotalRight, float descDy) throws IOException {
       if (itens == null || itens.isEmpty()) return;
       float y = yStart;
       for (ItemDto it : itens) {
           if (y < yMin) break;
-
-          drawRightAligned(cs, FONT_REG, FONT_H, xQtdRight, y, BR.numero(it.getQuantidade())); // Qtde
-          BR.drawText(cs, FONT_REG, FONT_H, xUn, y, safe(it.getUnidade()));                    // Unidade
-          drawWrapped(cs, FONT_REG, FONT_H, xDesc, y + descDy, descMaxWidth, safe(it.getDescricao()), 10f); // Descrição
+          drawRightAligned(cs, FONT_REG, FONT_H, xQtdRight, y, BR.numero(it.getQuantidade()));
+          BR.drawText(cs, FONT_REG, FONT_H, xUn, y, safe(it.getUnidade()));
+          drawWrapped(cs, FONT_REG, FONT_H, xDesc, y + descDy, descMaxWidth, safe(it.getDescricao()), 10f);
           double subtotal = (it.getPrecoVenda() != null && it.getPrecoVenda().doubleValue() > 0)
                   ? it.getPrecoVenda().doubleValue()
                   : ((it.getCusto() != null && it.getQuantidade() != null)
                         ? it.getCusto().doubleValue() * it.getQuantidade().doubleValue()
                         : 0.0);
-          drawRightAligned(cs, FONT_REG, FONT_H, xSubtotalRight, y, BR.moeda(subtotal));       // Subtotal
-
+          drawRightAligned(cs, FONT_REG, FONT_H, xSubtotalRight, y, BR.moeda(subtotal));
           y -= rowStep;
       }
   }
 
-  /** Layout NOVO – Serviços */
-  private static void drawServicesRowsV2(
-          PDPageContentStream cs,
-          java.util.List<ItemDto> itens,
+  private static void drawServicesRowsV2(PDPageContentStream cs, List<ItemDto> itens,
           float yStart, float rowStep, float yMin,
-          float xQtdRight, float xUn,
-          float xDesc, float descMaxWidth,
-          float xCustoUnitRight, float xSubtotalRight,
-          float descDy
-  ) throws IOException {
+          float xQtdRight, float xUn, float xDesc, float descMaxWidth,
+          float xCustoUnitRight, float xSubtotalRight, float descDy) throws IOException {
       if (itens == null || itens.isEmpty()) return;
       float y = yStart;
       for (ItemDto it : itens) {
           if (y < yMin) break;
-
-          drawRightAligned(cs, FONT_REG, FONT_H, xQtdRight, y, BR.numero(it.getQuantidade())); // Qtde
-          BR.drawText(cs, FONT_REG, FONT_H, xUn, y, safe(it.getUnidade()));                    // Unidade
-          drawWrapped(cs, FONT_REG, FONT_H, xDesc, y + descDy, descMaxWidth, safe(it.getDescricao()), 10f); // Serviço
-
+          drawRightAligned(cs, FONT_REG, FONT_H, xQtdRight, y, BR.numero(it.getQuantidade()));
+          BR.drawText(cs, FONT_REG, FONT_H, xUn, y, safe(it.getUnidade()));
+          drawWrapped(cs, FONT_REG, FONT_H, xDesc, y + descDy, descMaxWidth, safe(it.getDescricao()), 10f);
           double custoU = 0.0;
           if (it.getPrecoVenda() != null && it.getQuantidade() != null && it.getQuantidade().doubleValue() > 0) {
               custoU = it.getPrecoVenda().doubleValue() / it.getQuantidade().doubleValue();
           } else if (it.getCusto() != null && it.getQuantidade() != null && it.getQuantidade().doubleValue() > 0) {
               custoU = it.getCusto().doubleValue() / it.getQuantidade().doubleValue();
           }
-          drawRightAligned(cs, FONT_REG, FONT_H, xCustoUnitRight, y, BR.moeda(custoU));       // Custo Unit.
-
+          drawRightAligned(cs, FONT_REG, FONT_H, xCustoUnitRight, y, BR.moeda(custoU));
           double subtotal = (it.getPrecoVenda() != null && it.getPrecoVenda().doubleValue() > 0)
                   ? it.getPrecoVenda().doubleValue()
                   : ((it.getCusto() != null && it.getQuantidade() != null)
                         ? it.getCusto().doubleValue() * it.getQuantidade().doubleValue()
                         : 0.0);
-          drawRightAligned(cs, FONT_REG, FONT_H, xSubtotalRight, y, BR.moeda(subtotal));      // Subtotal
-
+          drawRightAligned(cs, FONT_REG, FONT_H, xSubtotalRight, y, BR.moeda(subtotal));
           y -= rowStep;
       }
   }
 
-  /** Fallback genérico (8 colunas) */
-  private static void drawTableRowsOld(
-          PDPageContentStream cs,
-          java.util.List<ItemDto> itens,
+  private static void drawTableRowsOld(PDPageContentStream cs, List<ItemDto> itens,
           float yStart, float rowStep, float yMin,
           float xDesc, float xComp, float xUn, float xQtd,
-          float xCusto, float xPreco, float xDescLim, float xPrecoKg
-  ) throws IOException {
+          float xCusto, float xPreco, float xDescLim, float xPrecoKg) throws IOException {
       if (itens == null || itens.isEmpty()) return;
       float y = yStart;
       for (ItemDto it : itens) {
           if (y < yMin) break;
-
           drawWrapped(cs, FONT_REG, FONT_H, xDesc, y, 230f, safe(it.getDescricao()), 10f);
           BR.drawText(cs, FONT_REG, FONT_H, xComp, y, safe(it.getComp()));
           BR.drawText(cs, FONT_REG, FONT_H, xUn,   y, safe(it.getUnidade()));
@@ -352,8 +313,9 @@ public class StongelTemplateRenderer {
   }
 
   private static void drawRightAligned(PDPageContentStream cs, PDFont font, float fontSize,
-																			float xRight, float y, String text) throws IOException {
+                                       float xRight, float y, String text) throws IOException {
       if (text == null) text = "-";
+      text = sanitizeText(text);
       float w = font.getStringWidth(text) / 1000f * fontSize;
       BR.drawText(cs, font, fontSize, xRight - w, y, text);
   }
@@ -362,6 +324,7 @@ public class StongelTemplateRenderer {
                                   float x, float y, float maxWidth,
                                   String text, float lineStep) throws IOException {
       if (text == null || text.isBlank()) return;
+      text = sanitizeText(text);
       String[] words = text.split("\\s+");
       String line = "";
       float cursorY = y;
@@ -381,36 +344,137 @@ public class StongelTemplateRenderer {
       }
   }
 
-  @SuppressWarnings("unused")
-	private static void drawParagraph(PDPageContentStream cs, PDFont font, float fontSize,
-                                    float x, float y, float maxWidth,
-                                    String text, float lineStep) throws IOException {
-      if (text == null || text.isBlank()) {
-          BR.drawText(cs, font, fontSize, x, y, "-");
-          return;
-      }
-      String[] words = text.split("\\s+");
-      String line = "";
-      float cursorY = y;
-      for (String w : words) {
-          String probe = line.isEmpty() ? w : line + " " + w;
-          float width = font.getStringWidth(probe) / 1000f * fontSize;
-          if (width > maxWidth) {
-              BR.drawText(cs, font, fontSize, x, cursorY, line);
-              cursorY -= lineStep;
-              line = w;
-          } else {
-              line = probe;
+  /* ====================== SEÇÕES (páginas 2..13) ====================== */
+  private void renderSections(PDDocument doc, JsonNode raw, JsonNode cfg,
+                              int idxHeader, int idxTables, boolean debugGrid,
+                              float gridStep, float gridMajor) throws IOException {
+      JsonNode sectionsCfg = at(cfg, "sections");
+      if (sectionsCfg == null || !sectionsCfg.fieldNames().hasNext()) return;
+
+      // indexa o array "sections" do payload por slug
+      Map<String, JsonNode> bySlug = new HashMap<>();
+      JsonNode arr = raw.path("sections");
+      if (arr != null && arr.isArray()) {
+          for (JsonNode s : arr) {
+              String slug = s.path("slug").asText(null);
+              if (slug != null) bySlug.put(slug, s);
           }
       }
-      if (!line.isEmpty()) {
-          BR.drawText(cs, font, fontSize, x, cursorY, line);
+
+      // Cursor por página para empilhar seções sem sobrepor
+      Map<Integer, Float> pageCursorY = new HashMap<>();
+      final float MARGIN_BOTTOM = 60f;
+      final float BETWEEN_PARAGRAPHS = 6f;
+
+      Iterator<String> it = sectionsCfg.fieldNames();
+      while (it.hasNext()) {
+          String slug = it.next();
+          JsonNode cfgSec = sectionsCfg.path(slug);
+          int pageIndex = cfgSec.path("page").asInt();
+
+          // NÃO mexer na página 1 (idxHeader) nem na página de tabelas (idxTables)
+          if (pageIndex == idxHeader || pageIndex == idxTables) continue;
+          if (pageIndex < 0 || pageIndex >= doc.getNumberOfPages()) continue;
+
+          float x = (float) cfgSec.path("x").asDouble(60);
+          float y = (float) cfgSec.path("y").asDouble(640);
+          float maxW = (float) cfgSec.path("maxW").asDouble(480);
+          float lineStep = (float) cfgSec.path("lineStep").asDouble(12);
+          float fontSize = (float) cfgSec.path("fontSize").asDouble(10);
+
+          // aplica empilhamento por página
+          float startY = y;
+          if (pageCursorY.containsKey(pageIndex)) {
+              startY = Math.min(pageCursorY.get(pageIndex) - BETWEEN_PARAGRAPHS, startY);
+          }
+
+          PDPage page = doc.getPage(pageIndex);
+          try (PDPageContentStream cs = new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
+              normalizeToCropBox(cs, page);
+              if (debugGrid) drawGrid(cs, page, gridStep, gridMajor);
+
+              JsonNode sec = bySlug.get(slug);
+              if (sec == null) {
+                  // se não veio no payload, não desenha
+                  pageCursorY.put(pageIndex, startY);
+                  continue;
+              }
+
+              String titulo = sec.path("titulo").asText("");
+              String html   = sec.path("descricao").asText("");
+              String plain  = htmlToPlain(html);
+
+              float cursorY = startY;
+
+              if (titulo != null && !titulo.isBlank()) {
+                  BR.drawText(cs, FONT_BOLD, fontSize, x, cursorY, sanitizeText(titulo));
+                  cursorY -= (lineStep + 2);
+              }
+
+              String[] paras = plain.split("\\n\\s*\\n");
+              outer:
+              for (String p : paras) {
+                  String[] lines = p.split("\\n");
+                  for (String ln : lines) {
+                      if (ln.isBlank()) { cursorY -= lineStep; continue; }
+                      drawWrapped(cs, FONT_REG, fontSize, x, cursorY, maxW, ln, lineStep);
+                      float width = FONT_REG.getStringWidth(sanitizeText(ln)) / 1000f * fontSize;
+                      int nLines = Math.max(1, (int)Math.ceil(width / Math.max(1f, maxW)));
+                      cursorY -= (nLines * lineStep);
+                      if (cursorY < MARGIN_BOTTOM) break outer;
+                  }
+                  cursorY -= BETWEEN_PARAGRAPHS;
+                  if (cursorY < MARGIN_BOTTOM) break;
+              }
+
+              pageCursorY.put(pageIndex, cursorY);
+          }
       }
   }
 
-  /* ===========================
-     TOTAIS — Ajusta apenas valores
-     =========================== */
+  private static String htmlToPlain(String html) {
+      if (html == null) return "";
+      String t = html;
+      t = t.replaceAll("(?i)<br\\s*/?>", "\n");
+      t = t.replaceAll("(?i)</p>", "\n\n");
+      t = t.replaceAll("(?i)<p[^>]*>", "");
+      t = t.replaceAll("(?s)<[^>]+>", "");
+      t = t.replace("&nbsp;", " ");
+      t = t.replace("&amp;", "&");
+      t = t.replace("&lt;", "<");
+      t = t.replace("&gt;", ">");
+      t = t.replace("&quot;", "\"");
+      t = t.replace("&#39;", "'");
+      t = t.replaceAll("[ \\t\\x0B\\f\\r]+", " ").trim();
+      t = t.replaceAll("\\n{3,}", "\n\n");
+      return t;
+  }
+
+  private static String sanitizeText(String s) {
+      if (s == null) return "";
+      String t = s;
+      t = t.replace('•', '-');
+      t = t.replace('→', '-');
+      t = t.replace('–', '-');
+      t = t.replace('—', '-');
+      t = t.replace('“', '"').replace('”', '"');
+      t = t.replace('‘', '\'').replace('’', '\'');
+      t = t.replace('\u00A0', ' ');
+      StringBuilder sb = new StringBuilder();
+      for (int i = 0; i < t.length(); i++) {
+          char c = t.charAt(i);
+          if (c >= 32 && c <= 126 || c == '\n' || c == '\t') {
+              sb.append(c);
+          } else if (c >= 160 && c <= 255) {
+              sb.append(c);
+          } else {
+              sb.append('?');
+          }
+      }
+      return sb.toString();
+  }
+
+  /* =========================== TOTAIS =========================== */
   private static void drawTotalsValuesOnlyAdjusted(PDPageContentStream cs, TotaisDto t,
                                                    float baseXLabel, float baseXVal,
                                                    float baseYTop, float stepY,
@@ -418,40 +482,24 @@ public class StongelTemplateRenderer {
                                                    JsonNode ajustes, JsonNode tabsNode) throws IOException {
       if (t == null) return;
 
-      // ordem lógica das linhas
-      String[] keys = new String[]{
-              "subtotal",
-              "desconto",
-              "totalMateriais",
-              "totalServicos",
-              "mobilizacao",
-              "totalGeral"
-      };
+      String[] keys = new String[]{ "subtotal", "desconto", "totalMateriais", "totalServicos", "mobilizacao", "totalGeral" };
 
       for (int i = 0; i < keys.length; i++) {
           String key = keys[i];
           BigDecimal valor = getValorPorChave(t, key);
           if (valor == null) valor = BigDecimal.ZERO;
 
-          // Y base da linha (fixo para label)
           float yLabel = baseYTop - (i * stepY);
 
-          // Label SEM ajuste
           String label = formatLabel(key);
           BR.drawText(cs, FONT_REG, FONT_H, baseXLabel, yLabel, label);
 
-          // Valor COM ajuste (global + individual)
           float dx = globalDx + getAdj(ajustes, key, "dx");
           float dy = globalDy + getAdj(ajustes, key, "dy");
           float xVal = baseXVal + dx;
           float yVal = yLabel + dy;
 
-          if ("totalGeral".equals(key)) {
-              // Pode aplicar estilo extra aqui se quiser
-              BR.drawText(cs, FONT_REG, FONT_H, xVal, yVal, BR.moeda(valor));
-          } else {
-              BR.drawText(cs, FONT_REG, FONT_H, xVal, yVal, BR.moeda(valor));
-          }
+          BR.drawText(cs, FONT_REG, FONT_H, xVal, yVal, BR.moeda(valor));
       }
   }
 
@@ -499,7 +547,7 @@ public class StongelTemplateRenderer {
           cs.setStrokingColor(isMajor ? Color.GRAY : new Color(200,200,200));
           cs.moveTo(x, 0);
           cs.lineTo(x, h);
-          cs.stroke();
+              cs.stroke();
           if (isMajor) {
               BR.drawText(cs, FONT_REG, 7f, x + 2, 3, String.valueOf((int) x));
           }
@@ -553,12 +601,11 @@ public class StongelTemplateRenderer {
   }
 
   private BudgetDto mapRealJsonToBudgetDto(JsonNode root) {
-      // Empresa
       String razao = text(root, "dadosEmpresa.razaoSocial");
       String cnpj  = text(root, "dadosEmpresa.cnpj");
       String contato = text(root, "dadosEmpresa.dadosResponsavel.nomeResponsavel");
       if (contato == null || (contato != null && contato.isBlank()))
-          contato = text(root, "dadosEmpresa.nomeFantasia"); // fallback
+          contato = text(root, "dadosEmpresa.nomeFantasia");
       String tel = coalesce(
               text(root, "dadosEmpresa.dadosResponsavel.raw.dadosContato.telefoneResponsavel"),
               text(root, "dadosEmpresa.telefone")
@@ -568,7 +615,6 @@ public class StongelTemplateRenderer {
               text(root, "dadosEmpresa.email")
       );
 
-      // Obra (linha única, compacta)
       String endereco = coalesce(text(root, "dadosObra.endereco"), "");
       String ref      = coalesce(text(root, "dadosObra.referencia"), "");
       String metragem = Optional.ofNullable(root.at("/dadosObra/metragemTotal").numberValue())
@@ -578,7 +624,6 @@ public class StongelTemplateRenderer {
           obra = joinNonEmpty(obra, metragem + " m²", " • ");
       }
 
-      // Lookup de unidade de materiais pelas áreas (id -> unidade)
       Map<String, String> unidadePorMaterialId = new HashMap<>();
       for (JsonNode area : arr(root, "areasConfiguradas")) {
           for (JsonNode m : arr(area, "materiais")) {
@@ -588,64 +633,54 @@ public class StongelTemplateRenderer {
           }
       }
 
-      // Materiais
-      java.util.List<ItemDto> materiais = new ArrayList<>();
+      List<ItemDto> materiais = new ArrayList<>();
       for (JsonNode p : arr(root, "precificacao.produtos")) {
           ItemDto it = new ItemDto();
           it.setDescricao(text(p, "descricao"));
-          it.setComp("-"); // placeholder
+          it.setComp("-");
           String un = unidadePorMaterialId.get(text(p, "id"));
           it.setUnidade(coalesce(un, "CJ"));
           it.setQuantidade(number(p, "quantidadeCJ"));
           if (it.getQuantidade() == null || it.getQuantidade().doubleValue() == 0d) {
-              it.setQuantidade(number(p, "quantidade")); // fallback
+              it.setQuantidade(number(p, "quantidade"));
           }
           it.setCusto(number(p, "precoBase"));
-          it.setPrecoVenda(number(p, "valorTotal")); // SUBTOTAL por item
+          it.setPrecoVenda(number(p, "valorTotal"));
           it.setLimiteDesconto(BigDecimal.ZERO);
           it.setPrecoKg(BigDecimal.ZERO);
           materiais.add(it);
       }
 
-      // Serviços
-      java.util.List<ItemDto> servicos = new ArrayList<>();
+      List<ItemDto> servicos = new ArrayList<>();
       for (JsonNode s : arr(root, "precificacao.servicos")) {
           ItemDto it = new ItemDto();
           it.setDescricao(text(s, "descricao"));
           it.setUnidade("m²");
           it.setQuantidade(number(s, "quantidade"));
-          it.setCusto(number(s, "valorUnitario")); // para cálculo opcional
-          it.setPrecoVenda(number(s, "valorTotal")); // SUBTOTAL
+          it.setCusto(number(s, "valorUnitario"));
+          it.setPrecoVenda(number(s, "valorTotal"));
           it.setLimiteDesconto(BigDecimal.ZERO);
           it.setPrecoKg(BigDecimal.ZERO);
           it.setComp("-");
           servicos.add(it);
       }
 
-      // Totais
       TotaisDto tot = new TotaisDto();
       tot.setTotalMateriais(number(root, "precificacao.totais.material"));
       tot.setTotalServicos(number(root, "precificacao.totais.servico"));
-
-      BigDecimal desconto = BigDecimal.ZERO; // ajuste se tiver
+      BigDecimal desconto = BigDecimal.ZERO;
       tot.setDesconto(desconto);
-
       BigDecimal subtotal = safeBD(tot.getTotalMateriais()).add(safeBD(tot.getTotalServicos()));
       tot.setSubtotal(subtotal);
-
-      // Mobilização: consolidado
       BigDecimal mobil = number(root, "precificacao.dadosMobilizacao.total.totalMobilizacao");
       if (mobil == null || mobil.compareTo(BigDecimal.ZERO) == 0) {
           mobil = number(root, "precificacao.mobilizacao");
       }
       tot.setMobilizacao(mobil);
-
       BigDecimal totalGeral = subtotal.add(safeBD(mobil)).subtract(safeBD(desconto));
       tot.setTotalGeral(totalGeral);
 
-      // Monta DTO
       BudgetDto dto = new BudgetDto();
-
       EmpresaDto empDto = new EmpresaDto();
       empDto.setRazaoSocial(razao);
       empDto.setCnpj(cnpj);
@@ -697,8 +732,6 @@ public class StongelTemplateRenderer {
       return (a != null && !a.isBlank()) ? a : (b != null ? b : null);
   }
 
-  // ----------------- Util genéricas -----------------
-
   private static int getInt(JsonNode n, String path, int def) {
       JsonNode j = at(n, path);
       return (j != null && j.isInt()) ? j.asInt() : def;
@@ -727,7 +760,7 @@ public class StongelTemplateRenderer {
       try { return Float.parseFloat(v); } catch (Exception e) { return def; }
   }
 
-  private static boolean hasItems(java.util.List<?> list) {
+  private static boolean hasItems(List<?> list) {
       return list != null && !list.isEmpty();
   }
 

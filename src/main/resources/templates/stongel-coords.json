@@ -9,6 +9,7 @@
     "email":   { "x": 100, "y": 95  }
   },
 
+
   "layout": {
     "materiais": {
       "xQtdRight": 65,
@@ -16,9 +17,8 @@
       "xDesc": 200,
       "descMaxWidth": 360,
       "xSubtotalRight": 510,
-      "descDx":  -30,
-      "descDy":  0,
-
+      "descDx": -30,
+      "descDy": 0,
       "yFirst": 555,
       "rowStep": 16,
       "yMin": 380
@@ -30,9 +30,8 @@
       "descMaxWidth": 340,
       "xCustoUnitRight": 470,
       "xSubtotalRight": 565,
-      "descDx":  -30,
-      "descDy":  0,
-
+      "descDx": -30,
+      "descDy": 0,
       "yFirst": 380,
       "rowStep": 16,
       "yMin": 190
@@ -47,11 +46,39 @@
     "valDx":   0,
     "valDy":   0,
     "ajustesIndividuais": {
-      "subtotal":        { "dx": -100,  "dy": 35  },
-      "desconto":        { "dx": 0,  "dy": -4 },
-      "totalMateriais":  { "dx": -100,  "dy": 270 },
-      "totalServicos":   { "dx": -100,  "dy": 100 },
-      "mobilizacao":     { "dx": -150, "dy":  145 }
+      "subtotal":       { "dx": -100, "dy":  35 },
+      "desconto":       { "dx":    0, "dy":  -4 },
+      "totalMateriais": { "dx": -100, "dy": 270 },
+      "totalServicos":  { "dx": -100, "dy": 100 },
+      "mobilizacao":    { "dx": -150, "dy": 145 }
     }
+  },
+
+  "sections": {
+
+
+    "apresentacao-da-empresa":                      { "page": 1,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+    "1-informacoes-do-sistema":                     { "page": 2,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+    "2-preparo-de-superficie":                      { "page": 3,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+    "3-aplicacao-do-sistema":                       { "page": 4,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+
+
+
+    "4-notas-importantes":                          { "page": 6,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+    "5-mobilizacao-agendamento-e-execucao-da-obra": { "page": 7,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+
+    "6-responsabilidade-da-contratante":            { "page": 8,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+
+
+    "7-responsabilidade-da-contratada":             { "page": 9, "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+    "8-condicoes-do-substrato":                     { "page": 9, "x": 60, "y": 480, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+
+    "9-termos-de-garantia":                         { "page": 10, "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+
+    "10-rescisao":                                  { "page": 11, "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+    "11-multas-moratorias":                         { "page": 11, "x": 60, "y": 480, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+    "12-protecao-de-dados":                         { "page": 11, "x": 60, "y": 320, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+
+    "13-do-foro":                                   { "page": 12, "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 }
   }
 }
