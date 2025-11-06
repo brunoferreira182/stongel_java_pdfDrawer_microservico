@@ -62,9 +62,12 @@ public class StongelTemplateRenderer {
           templateBytes = is.readAllBytes();
       }
 
-      // Índices de páginas (0-based) — tables DEFAULT = 5 (página 6)
+      // Índices de páginas (0-based)
       int PAGE_IDX_HEADER_TOTAIS = getInt(cfg, "pageIndexes.headerTotais", 0);
-      int PAGE_IDX_TABELAS       = getInt(cfg, "pageIndexes.tables", 5);
+
+      // ⚠️ FORÇADO: Tabelas sempre na página 6 (idx 5)
+      // Mesmo que o coords.json esteja com 6, trazemos os dados para a página 6
+      int PAGE_IDX_TABELAS = 5;
 
       // -------- Empresa / Página 1 (valores ficam off-screen por padrão) --------
       float X_EMP_RAZAO = getF(cfg, "empresa.razao.x", -10000f);
@@ -170,7 +173,7 @@ public class StongelTemplateRenderer {
               BR.drawText(cs, FONT_REG, FONT_H, X_EMP_EMAIL, Y_EMP_EMAIL, emp != null ? emp.getEmail()       : "-");
           }
 
-          // ===== Página de Tabelas (idx tables -> por padrão página 6) =====
+          // ===== Página de Tabelas (forçada para idx 5 => página 6) =====
           PDPage pageTab = doc.getPage(PAGE_IDX_TABELAS);
           try (PDPageContentStream cs = new PDPageContentStream(doc, pageTab, AppendMode.APPEND, true, true)) {
               normalizeToCropBox(cs, pageTab);
@@ -215,6 +218,7 @@ public class StongelTemplateRenderer {
                   }
               }
 
+              // Totais também na mesma página 6
               drawTotalsValuesOnlyAdjusted(cs, dto.getTotais(),
                       X_TOT_TAB_LABEL, X_TOT_TAB_VAL,
                       Y_TOT_TAB_TOP, Y_TOT_TAB_STEP,
@@ -224,6 +228,7 @@ public class StongelTemplateRenderer {
 
           // ===== Demais páginas: SEÇÕES (JSON bruto) =====
           if (rawJson != null) {
+              // Importante: mantém bloqueio para NÃO escrever sections na página de tabelas (idx 5)
               renderSections(doc, rawJson, cfg, PAGE_IDX_HEADER_TOTAIS, PAGE_IDX_TABELAS, debugGrid, gridStep, gridMajor);
           }
 
@@ -374,7 +379,7 @@ public class StongelTemplateRenderer {
           JsonNode cfgSec = sectionsCfg.path(slug);
           int pageIndex = cfgSec.path("page").asInt();
 
-          // NÃO mexer na página 1 (idxHeader) nem na página de tabelas (idxTables)
+          // NÃO mexer na página 1 (idxHeader) nem na página de tabelas (idxTables = 5)
           if (pageIndex == idxHeader || pageIndex == idxTables) continue;
           if (pageIndex < 0 || pageIndex >= doc.getNumberOfPages()) continue;
 
@@ -429,7 +434,7 @@ public class StongelTemplateRenderer {
       final PDFont font;
       final float  fs;
       final boolean underline;
-      final float  indent; // não usamos aqui, mas mantemos para futura extensão
+      final float  indent;
       Span(String text, PDFont font, float fs, boolean underline, float indent) {
           this.text = text;
           this.font = font;

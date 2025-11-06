@@ -70,7 +70,7 @@
     "3-aplicacao-do-sistema":                       { "page": 4,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
 
     "4-notas-importantes":                          { "page": 6,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
-    "5-mobilizacao-agendamento-e-execucao-da-obra": { "page": 6,  "x": 60, "y": 480, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+    "5-mobilizacao-agendamento-e-execucao-da-obra": { "page": 7,  "x": 60, "y": 480, "maxW": 480, "lineStep": 12, "fontSize": 10 },
 
     "6-responsabilidade-da-contratante":            { "page": 8,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
 
