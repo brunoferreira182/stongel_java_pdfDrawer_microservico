@@ -220,6 +220,9 @@ public class StongelTemplateRenderer {
                       AJUSTES_IND, at(cfg, "totaisTables"));
           }
 
+          // ===== *** PÁGINA 6 (idx 5) — ADICIONADA *** =====
+          renderPage6(doc, dto, rawJson, cfg, /*pageIndex*/ 5, debugGrid, gridStep, gridMajor);
+
           // ===== Demais páginas: SEÇÕES (JSON bruto) =====
           if (rawJson != null) {
               renderSections(doc, rawJson, cfg, PAGE_IDX_HEADER_TOTAIS, PAGE_IDX_TABELAS, debugGrid, gridStep, gridMajor);
@@ -721,7 +724,7 @@ public class StongelTemplateRenderer {
 
   private String joinNonEmpty(String a, String b, String sep) {
       a = (a == null ? "" : a.trim());
-      b = (b == null ? "" : b.trim());
+      b = (b == null ? "" : a.trim());
       if (a.isEmpty() && b.isEmpty()) return "";
       if (a.isEmpty()) return b;
       if (b.isEmpty()) return a;
@@ -772,5 +775,76 @@ public class StongelTemplateRenderer {
       if (ajustes == null || ajustes.isMissingNode()) return 0f;
       JsonNode node = ajustes.path(key).path(axis);
       return node.isNumber() ? (float) node.asDouble() : 0f;
+  }
+
+  /* ====================== PÁGINA 6 (idx 5) — NOVO BLOCO ====================== */
+  private void renderPage6(PDDocument doc, BudgetDto dto, JsonNode rawJson, JsonNode cfg,
+                           int pageIndex, boolean debugGrid, float gridStep, float gridMajor) throws IOException {
+      if (pageIndex < 0 || pageIndex >= doc.getNumberOfPages()) return;
+
+      JsonNode p6 = at(cfg, "page6"); // coordenadas opcionais
+      PDPage page = doc.getPage(pageIndex);
+
+      try (PDPageContentStream cs = new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
+          normalizeToCropBox(cs, page);
+          if (debugGrid) drawGrid(cs, page, gridStep, gridMajor);
+
+          // 1) Texto da seção "5-mobilizacao-agendamento-e-execucao-da-obra" (se vier no payload)
+          if (rawJson != null) {
+              JsonNode sections = rawJson.path("sections");
+              if (sections != null && sections.isArray()) {
+                  for (JsonNode s : sections) {
+                      String slug = s.path("slug").asText("");
+                      if ("5-mobilizacao-agendamento-e-execucao-da-obra".equals(slug)) {
+                          String titulo = sanitizeText(htmlToPlain(s.path("titulo").asText("")));
+                          String body   = sanitizeText(htmlToPlain(s.path("descricao").asText("")));
+
+                          float x = getF(p6, "mobilizacaoText.x", 60f);
+                          float y = getF(p6, "mobilizacaoText.y", 640f);
+                          float maxW = getF(p6, "mobilizacaoText.maxW", 480f);
+                          float lineStep = getF(p6, "mobilizacaoText.lineStep", 12f);
+                          float fontSize = getF(p6, "mobilizacaoText.fontSize", 10f);
+
+                          if (!titulo.isBlank()) {
+                              BR.drawText(cs, FONT_BOLD, fontSize, x, y, titulo);
+                              y -= (lineStep + 2);
+                          }
+                          if (!body.isBlank()) {
+                              drawWrapped(cs, FONT_REG, fontSize, x, y, maxW, body, lineStep);
+                          }
+                          break;
+                      }
+                  }
+              }
+          }
+
+          // 2) Totais na página 6: Total Materiais, Total Serviços, Mobilização
+          TotaisDto t = dto.getTotais();
+          if (t != null) {
+              float mLabelX = getF(p6, "materiais.label.x", 420f);
+              float mLabelY = getF(p6, "materiais.label.y", 230f);
+              float mValX   = getF(p6, "materiais.value.x", 560f);
+              float mValY   = getF(p6, "materiais.value.y", 230f);
+
+              float sLabelX = getF(p6, "servicos.label.x", 420f);
+              float sLabelY = getF(p6, "servicos.label.y", 214f);
+              float sValX   = getF(p6, "servicos.value.x", 560f);
+              float sValY   = getF(p6, "servicos.value.y", 214f);
+
+              float mobLabelX = getF(p6, "mobilizacao.label.x", 420f);
+              float mobLabelY = getF(p6, "mobilizacao.label.y", 198f);
+              float mobValX   = getF(p6, "mobilizacao.value.x", 560f);
+              float mobValY   = getF(p6, "mobilizacao.value.y", 198f);
+
+              BR.drawText(cs, FONT_REG, FONT_H, mLabelX, mLabelY, "Total Materiais");
+              BR.drawText(cs, FONT_REG, FONT_H, mValX,   mValY,   BR.moeda(t.getTotalMateriais()));
+
+              BR.drawText(cs, FONT_REG, FONT_H, sLabelX, sLabelY, "Total Serviços");
+              BR.drawText(cs, FONT_REG, FONT_H, sValX,   sValY,   BR.moeda(t.getTotalServicos()));
+
+              BR.drawText(cs, FONT_REG, FONT_H, mobLabelX, mobLabelY, "Mobilização");
+              BR.drawText(cs, FONT_REG, FONT_H, mobValX,   mobValY,   BR.moeda(t.getMobilizacao()));
+          }
+      }
   }
 }

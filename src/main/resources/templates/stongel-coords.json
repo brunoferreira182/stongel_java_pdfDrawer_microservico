@@ -84,5 +84,12 @@
     "12-protecao-de-dados":                         { "page": 11, "x": 60, "y": 320, "maxW": 480, "lineStep": 12, "fontSize": 10 },
 
     "13-do-foro":                                   { "page": 12, "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 }
+  },
+    "page6": {
+    "mobilizacaoText": { "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+    "materiais":   { "label": { "x": 420, "y": 230 }, "value": { "x": 560, "y": 230 } },
+    "servicos":    { "label": { "x": 420, "y": 214 }, "value": { "x": 560, "y": 214 } },
+    "mobilizacao": { "label": { "x": 420, "y": 198 }, "value": { "x": 560, "y": 198 } }
   }
+
 }
