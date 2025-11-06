@@ -33,6 +33,8 @@ public class StongelTemplateRenderer {
   // Tipografia
   private static final PDFont FONT_REG  = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
   private static final PDFont FONT_BOLD = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+  private static final PDFont FONT_ITALIC = new PDType1Font(Standard14Fonts.FontName.HELVETICA_OBLIQUE);
+  private static final PDFont FONT_MONO   = new PDType1Font(Standard14Fonts.FontName.COURIER);
   private static final float  FONT_H    = 10f;
 
   private final ObjectMapper om = new ObjectMapper();
@@ -60,9 +62,9 @@ public class StongelTemplateRenderer {
           templateBytes = is.readAllBytes();
       }
 
-      // Índices de páginas (0-based)
+      // Índices de páginas (0-based) — tables DEFAULT = 5 (página 6)
       int PAGE_IDX_HEADER_TOTAIS = getInt(cfg, "pageIndexes.headerTotais", 0);
-      int PAGE_IDX_TABELAS       = getInt(cfg, "pageIndexes.tables", 6);
+      int PAGE_IDX_TABELAS       = getInt(cfg, "pageIndexes.tables", 5);
 
       // -------- Empresa / Página 1 (valores ficam off-screen por padrão) --------
       float X_EMP_RAZAO = getF(cfg, "empresa.razao.x", -10000f);
@@ -168,7 +170,7 @@ public class StongelTemplateRenderer {
               BR.drawText(cs, FONT_REG, FONT_H, X_EMP_EMAIL, Y_EMP_EMAIL, emp != null ? emp.getEmail()       : "-");
           }
 
-          // ===== Página de Tabelas (idx tables) =====
+          // ===== Página de Tabelas (idx tables -> por padrão página 6) =====
           PDPage pageTab = doc.getPage(PAGE_IDX_TABELAS);
           try (PDPageContentStream cs = new PDPageContentStream(doc, pageTab, AppendMode.APPEND, true, true)) {
               normalizeToCropBox(cs, pageTab);
@@ -219,9 +221,6 @@ public class StongelTemplateRenderer {
                       VAL_DX, VAL_DY,
                       AJUSTES_IND, at(cfg, "totaisTables"));
           }
-
-          // ===== *** PÁGINA 6 (idx 5) — ADICIONADA *** =====
-          renderPage6(doc, dto, rawJson, cfg, /*pageIndex*/ 5, debugGrid, gridStep, gridMajor);
 
           // ===== Demais páginas: SEÇÕES (JSON bruto) =====
           if (rawJson != null) {
@@ -398,40 +397,378 @@ public class StongelTemplateRenderer {
 
               JsonNode sec = bySlug.get(slug);
               if (sec == null) {
-                  // se não veio no payload, não desenha
                   pageCursorY.put(pageIndex, startY);
                   continue;
               }
 
               String titulo = sec.path("titulo").asText("");
               String html   = sec.path("descricao").asText("");
-              String plain  = htmlToPlain(html);
 
               float cursorY = startY;
 
+              // Título da seção, se houver (negrito)
               if (titulo != null && !titulo.isBlank()) {
-                  BR.drawText(cs, FONT_BOLD, fontSize, x, cursorY, sanitizeText(titulo));
-                  cursorY -= (lineStep + 2);
+                  cursorY = drawWrappedStyledLine(cs, x, cursorY, maxW,
+                          List.of(new Span(sanitizeText(titulo), FONT_BOLD, fontSize + 1, false, 0)),
+                          lineStep + 2);
+                  cursorY -= 2f;
               }
 
-              String[] paras = plain.split("\\n\\s*\\n");
-              outer:
-              for (String p : paras) {
-                  String[] lines = p.split("\\n");
-                  for (String ln : lines) {
-                      if (ln.isBlank()) { cursorY -= lineStep; continue; }
-                      drawWrapped(cs, FONT_REG, fontSize, x, cursorY, maxW, ln, lineStep);
-                      float width = FONT_REG.getStringWidth(sanitizeText(ln)) / 1000f * fontSize;
-                      int nLines = Math.max(1, (int)Math.ceil(width / Math.max(1f, maxW)));
-                      cursorY -= (nLines * lineStep);
-                      if (cursorY < MARGIN_BOTTOM) break outer;
-                  }
-                  cursorY -= BETWEEN_PARAGRAPHS;
-                  if (cursorY < MARGIN_BOTTOM) break;
-              }
+              // Renderiza HTML com estilos básicos
+              cursorY = renderHtmlBlock(cs, html, x, cursorY, maxW, fontSize, lineStep, MARGIN_BOTTOM);
 
               pageCursorY.put(pageIndex, cursorY);
           }
+      }
+  }
+
+  /* ===== HTML básico para sections ===== */
+
+  private static class Span {
+      final String text;
+      final PDFont font;
+      final float  fs;
+      final boolean underline;
+      final float  indent; // não usamos aqui, mas mantemos para futura extensão
+      Span(String text, PDFont font, float fs, boolean underline, float indent) {
+          this.text = text;
+          this.font = font;
+          this.fs = fs;
+          this.underline = underline;
+          this.indent = indent;
+      }
+  }
+
+  private enum BlockType { P, H1, H2, H3, H4, UL, OL, PRE, BR }
+  private static class Block {
+      final BlockType type;
+      final String innerHtml;
+      Block(BlockType t, String h) { this.type = t; this.innerHtml = h; }
+  }
+
+  private float renderHtmlBlock(PDPageContentStream cs, String rawHtml,
+                                float x, float startY, float maxW,
+                                float baseFs, float lineStep, float marginBottom) throws IOException {
+
+      if (rawHtml == null || rawHtml.isBlank()) return startY;
+
+      String html = rawHtml
+              .replaceAll("(?i)<br\\s*/?>", "<br/>")
+              .replaceAll("(?i)</p>", "</p>\n")
+              .replaceAll("(?i)<p[^>]*>", "<p>")
+              .replaceAll("(?i)</h([1-4])>", "</h$1>\n")
+              .replace("\u00A0", " ");
+
+      List<Block> blocks = splitTopBlocks(html);
+
+      float y = startY;
+      int orderedListCounter = 0;
+
+      for (Block b : blocks) {
+          if (y < marginBottom) break;
+
+          switch (b.type) {
+              case H1: case H2: case H3: case H4: {
+                  float fs = switch (b.type) {
+                      case H1 -> baseFs + 6;
+                      case H2 -> baseFs + 4;
+                      case H3 -> baseFs + 2;
+                      default -> baseFs + 1;
+                  };
+                  List<Span> line = tokenizeInline(b.innerHtml, FONT_BOLD, fs);
+                  y = drawWrappedStyledLine(cs, x, y, maxW, line, lineStep + 2);
+                  y -= 4f;
+                  break;
+              }
+              case P: {
+                  List<List<Span>> lines = paragraphsFromHtml(b.innerHtml, baseFs);
+                  for (List<Span> line : lines) {
+                      y = drawWrappedStyledLine(cs, x, y, maxW, line, lineStep);
+                      if (y < marginBottom) break;
+                  }
+                  y -= 4f;
+                  break;
+              }
+              case BR: {
+                  y -= lineStep;
+                  break;
+              }
+              case UL: {
+                  List<String> lis = extractLi(b.innerHtml);
+                  for (String li : lis) {
+                      List<Span> spans = new ArrayList<>();
+                      spans.add(new Span("• ", FONT_BOLD, baseFs, false, 0));
+                      spans.addAll(tokenizeInline(li, FONT_REG, baseFs));
+                      y = drawWrappedStyledLine(cs, x + 12f, y, maxW - 12f, spans, lineStep);
+                      if (y < marginBottom) break;
+                  }
+                  y -= 4f;
+                  break;
+              }
+              case OL: {
+                  List<String> lis = extractLi(b.innerHtml);
+                  orderedListCounter = 0;
+                  for (String li : lis) {
+                      orderedListCounter++;
+                      List<Span> spans = new ArrayList<>();
+                      spans.add(new Span(orderedListCounter + ". ", FONT_BOLD, baseFs, false, 0));
+                      spans.addAll(tokenizeInline(li, FONT_REG, baseFs));
+                      y = drawWrappedStyledLine(cs, x + 12f, y, maxW - 12f, spans, lineStep);
+                      if (y < marginBottom) break;
+                  }
+                  y -= 4f;
+                  break;
+              }
+              case PRE: {
+                  String mono = stripTags(b.innerHtml)
+                          .replace("\r", "")
+                          .replace("\t", "    ");
+                  String[] lines = mono.split("\n");
+                  for (String ln : lines) {
+                      String t = sanitizeText(ln);
+                      BR.drawText(cs, FONT_MONO, baseFs, x, y, t);
+                      y -= lineStep;
+                      if (y < marginBottom) break;
+                  }
+                  y -= 2f;
+                  break;
+              }
+          }
+      }
+      return y;
+  }
+
+  private List<Block> splitTopBlocks(String html) {
+      List<Block> out = new ArrayList<>();
+      String rest = html;
+
+      while (!rest.isEmpty()) {
+          rest = rest.trim();
+          if (rest.isEmpty()) break;
+
+          if (rest.matches("(?is)^<br\\s*/?>.*")) {
+              out.add(new Block(BlockType.BR, ""));
+              rest = rest.replaceFirst("(?is)^<br\\s*/?>", "");
+              continue;
+          }
+
+          String[] heads = {"h1","h2","h3","h4"};
+          boolean consumed = false;
+          for (String h : heads) {
+              String open  = "(?is)^<" + h + "[^>]*>";
+              if (rest.matches(open + ".*")) {
+                  int iClose = idxOfClosing(rest, h);
+                  if (iClose >= 0) {
+                      String inner = rest.substring(rest.indexOf('>')+1, iClose);
+                      BlockType t = switch (h) {
+                          case "h1" -> BlockType.H1;
+                          case "h2" -> BlockType.H2;
+                          case "h3" -> BlockType.H3;
+                          default    -> BlockType.H4;
+                      };
+                      out.add(new Block(t, inner));
+                      rest = rest.substring(iClose + ("</"+h+">").length());
+                      consumed = true;
+                      break;
+                  }
+              }
+          }
+          if (consumed) continue;
+
+          if (rest.matches("(?is)^<ul[^>]*>.*")) {
+              int iClose = idxOfClosing(rest, "ul");
+              if (iClose >= 0) {
+                  out.add(new Block(BlockType.UL, rest.substring(rest.indexOf('>')+1, iClose)));
+                  rest = rest.substring(iClose + "</ul>".length());
+                  continue;
+              }
+          }
+          if (rest.matches("(?is)^<ol[^>]*>.*")) {
+              int iClose = idxOfClosing(rest, "ol");
+              if (iClose >= 0) {
+                  out.add(new Block(BlockType.OL, rest.substring(rest.indexOf('>')+1, iClose)));
+                  rest = rest.substring(iClose + "</ol>".length());
+                  continue;
+              }
+          }
+
+          if (rest.matches("(?is)^<pre[^>]*>.*")) {
+              int iClose = idxOfClosing(rest, "pre");
+              if (iClose >= 0) {
+                  out.add(new Block(BlockType.PRE, rest.substring(rest.indexOf('>')+1, iClose)));
+                  rest = rest.substring(iClose + "</pre>".length());
+                  continue;
+              }
+          }
+
+          if (rest.matches("(?is)^<p[^>]*>.*")) {
+              int iClose = idxOfClosing(rest, "p");
+              if (iClose >= 0) {
+                  out.add(new Block(BlockType.P, rest.substring(rest.indexOf('>')+1, iClose)));
+                  rest = rest.substring(iClose + "</p>".length());
+                  continue;
+              }
+          }
+
+          int nx = nextTopTagIndex(rest);
+          String chunk = (nx > 0 ? rest.substring(0, nx) : rest);
+          out.add(new Block(BlockType.P, chunk));
+          rest = (nx > 0 ? rest.substring(nx) : "");
+      }
+      return out;
+  }
+
+  private int idxOfClosing(String s, String tag) {
+      String close = "</" + tag + ">";
+      int i = s.toLowerCase().indexOf(close);
+      return i;
+  }
+
+  private int nextTopTagIndex(String s) {
+      String[] tags = {"<h1","<h2","<h3","<h4","<ul","<ol","<pre","<p","<br"};
+      int min = -1;
+      String sl = s.toLowerCase();
+      for (String t : tags) {
+          int i = sl.indexOf(t);
+          if (i >= 0) min = (min < 0 ? i : Math.min(min, i));
+      }
+      return min;
+  }
+
+  private List<String> extractLi(String innerHtml) {
+      List<String> out = new ArrayList<>();
+      String rest = innerHtml;
+      while (true) {
+          int i = rest.toLowerCase().indexOf("<li");
+          if (i < 0) break;
+          int iGt = rest.indexOf('>', i);
+          if (iGt < 0) break;
+          int iClose = rest.toLowerCase().indexOf("</li>", iGt);
+          if (iClose < 0) break;
+          String li = rest.substring(iGt + 1, iClose);
+          out.add(li);
+          rest = rest.substring(iClose + 5);
+      }
+      return out;
+  }
+
+  private String stripTags(String html) {
+      return html.replaceAll("(?is)<[^>]+>", "");
+  }
+
+  private List<Span> tokenizeInline(String html, PDFont defaultFont, float fs) {
+      List<Span> spans = new ArrayList<>();
+      if (html == null || html.isBlank()) return spans;
+
+      String s = html
+              .replaceAll("(?i)<br\\s*/?>", "\n")
+              .replace("&nbsp;", " ")
+              .replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">")
+              .replace("&quot;", "\"").replace("&#39;", "'");
+
+      boolean bold = (defaultFont == FONT_BOLD);
+      boolean italic = (defaultFont == FONT_ITALIC);
+      boolean underline = false;
+
+      StringBuilder buf = new StringBuilder();
+
+      for (int i = 0; i < s.length();) {
+          char c = s.charAt(i);
+
+          if (c == '<') {
+              if (buf.length() > 0) {
+                  PDFont f = (bold && italic) ? FONT_BOLD : (bold ? FONT_BOLD : (italic ? FONT_ITALIC : defaultFont));
+                  spans.add(new Span(sanitizeText(buf.toString()), f, fs, underline, 0));
+                  buf.setLength(0);
+              }
+              int j = s.indexOf('>', i);
+              if (j < 0) break;
+              String tag = s.substring(i+1, j).trim().toLowerCase(Locale.ROOT);
+              boolean closing = tag.startsWith("/");
+              String name = closing ? tag.substring(1) : tag;
+
+              switch (name) {
+                  case "b": case "strong": bold = !closing; break;
+                  case "i": case "em":     italic = !closing; break;
+                  case "u":                underline = !closing; break;
+                  case "br":               spans.add(new Span("\n", defaultFont, fs, false, 0)); break;
+                  default: break;
+              }
+              i = j + 1;
+          } else {
+              buf.append(c);
+              i++;
+          }
+      }
+      if (buf.length() > 0) {
+          PDFont f = (bold && italic) ? FONT_BOLD : (bold ? FONT_BOLD : (italic ? FONT_ITALIC : defaultFont));
+          spans.add(new Span(sanitizeText(buf.toString()), f, fs, underline, 0));
+      }
+      return spans;
+  }
+
+  private List<List<Span>> paragraphsFromHtml(String html, float baseFs) {
+      List<List<Span>> out = new ArrayList<>();
+      String normalized = html.replaceAll("(?i)</p>", "\n\n")
+                              .replaceAll("(?i)<p[^>]*>", "");
+      String[] paras = normalized.split("\\n\\s*\\n");
+      for (String p : paras) {
+          out.add(tokenizeInline(p, FONT_REG, baseFs));
+      }
+      return out;
+  }
+
+  private float drawWrappedStyledLine(PDPageContentStream cs,
+                                      float x, float y, float maxW,
+                                      List<Span> spans, float lineStep) throws IOException {
+      List<Span> lineAccum = new ArrayList<>();
+      float lineWidth = 0f;
+
+      for (Span sp : spans) {
+          String[] parts = sp.text.split("(?<=\\s)|(?=\\s)");
+          for (String part : parts) {
+              if (part.equals("\n")) {
+                  if (!lineAccum.isEmpty()) {
+                      drawSpans(cs, x, y, lineAccum);
+                      y -= lineStep;
+                      lineAccum.clear();
+                      lineWidth = 0f;
+                  } else {
+                      y -= lineStep;
+                  }
+                  continue;
+              }
+              String probe = part;
+              float w = sp.font.getStringWidth(probe) / 1000f * sp.fs;
+              if (lineWidth + w > maxW && !lineAccum.isEmpty()) {
+                  drawSpans(cs, x, y, lineAccum);
+                  y -= lineStep;
+                  lineAccum.clear();
+                  lineWidth = 0f;
+              }
+              lineAccum.add(new Span(probe, sp.font, sp.fs, sp.underline, sp.indent));
+              lineWidth += w;
+          }
+      }
+      if (!lineAccum.isEmpty()) {
+          drawSpans(cs, x, y, lineAccum);
+          y -= lineStep;
+      }
+      return y;
+  }
+
+  private void drawSpans(PDPageContentStream cs, float x, float y, List<Span> spans) throws IOException {
+      float cursorX = x;
+      for (Span sp : spans) {
+          BR.drawText(cs, sp.font, sp.fs, cursorX, y, sp.text);
+          float w = sp.font.getStringWidth(sp.text) / 1000f * sp.fs;
+          if (sp.underline) {
+              cs.setLineWidth(0.5f);
+              cs.moveTo(cursorX, y - 2);
+              cs.lineTo(cursorX + w, y - 2);
+              cs.stroke();
+          }
+          cursorX += w;
       }
   }
 
@@ -456,8 +793,8 @@ public class StongelTemplateRenderer {
   private static String sanitizeText(String s) {
       if (s == null) return "";
       String t = s;
-      t = t.replace('•', '-');
-      t = t.replace('→', '-');
+      t = t.replace('•', '•'); // preserva bullet
+      t = t.replace('→', '→');
       t = t.replace('–', '-');
       t = t.replace('—', '-');
       t = t.replace('“', '"').replace('”', '"');
@@ -550,7 +887,7 @@ public class StongelTemplateRenderer {
           cs.setStrokingColor(isMajor ? Color.GRAY : new Color(200,200,200));
           cs.moveTo(x, 0);
           cs.lineTo(x, h);
-              cs.stroke();
+          cs.stroke();
           if (isMajor) {
               BR.drawText(cs, FONT_REG, 7f, x + 2, 3, String.valueOf((int) x));
           }
@@ -596,7 +933,8 @@ public class StongelTemplateRenderer {
           return new ObjectMapper().readTree(is);
       } catch (Exception e) {
           try {
-              return new ObjectMapper().readTree("{\"pageIndexes\":{\"headerTotais\":0,\"tables\":6}}");
+              // DEFAULT tables -> 5 (página 6)
+              return new ObjectMapper().readTree("{\"pageIndexes\":{\"headerTotais\":0,\"tables\":5}}");
           } catch (IOException ex) {
               throw new RuntimeException("Falha ao carregar stongel-coords.json", ex);
           }
@@ -724,7 +1062,7 @@ public class StongelTemplateRenderer {
 
   private String joinNonEmpty(String a, String b, String sep) {
       a = (a == null ? "" : a.trim());
-      b = (b == null ? "" : a.trim());
+      b = (b == null ? "" : b.trim());
       if (a.isEmpty() && b.isEmpty()) return "";
       if (a.isEmpty()) return b;
       if (b.isEmpty()) return a;
@@ -775,76 +1113,5 @@ public class StongelTemplateRenderer {
       if (ajustes == null || ajustes.isMissingNode()) return 0f;
       JsonNode node = ajustes.path(key).path(axis);
       return node.isNumber() ? (float) node.asDouble() : 0f;
-  }
-
-  /* ====================== PÁGINA 6 (idx 5) — NOVO BLOCO ====================== */
-  private void renderPage6(PDDocument doc, BudgetDto dto, JsonNode rawJson, JsonNode cfg,
-                           int pageIndex, boolean debugGrid, float gridStep, float gridMajor) throws IOException {
-      if (pageIndex < 0 || pageIndex >= doc.getNumberOfPages()) return;
-
-      JsonNode p6 = at(cfg, "page6"); // coordenadas opcionais
-      PDPage page = doc.getPage(pageIndex);
-
-      try (PDPageContentStream cs = new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
-          normalizeToCropBox(cs, page);
-          if (debugGrid) drawGrid(cs, page, gridStep, gridMajor);
-
-          // 1) Texto da seção "5-mobilizacao-agendamento-e-execucao-da-obra" (se vier no payload)
-          if (rawJson != null) {
-              JsonNode sections = rawJson.path("sections");
-              if (sections != null && sections.isArray()) {
-                  for (JsonNode s : sections) {
-                      String slug = s.path("slug").asText("");
-                      if ("5-mobilizacao-agendamento-e-execucao-da-obra".equals(slug)) {
-                          String titulo = sanitizeText(htmlToPlain(s.path("titulo").asText("")));
-                          String body   = sanitizeText(htmlToPlain(s.path("descricao").asText("")));
-
-                          float x = getF(p6, "mobilizacaoText.x", 60f);
-                          float y = getF(p6, "mobilizacaoText.y", 640f);
-                          float maxW = getF(p6, "mobilizacaoText.maxW", 480f);
-                          float lineStep = getF(p6, "mobilizacaoText.lineStep", 12f);
-                          float fontSize = getF(p6, "mobilizacaoText.fontSize", 10f);
-
-                          if (!titulo.isBlank()) {
-                              BR.drawText(cs, FONT_BOLD, fontSize, x, y, titulo);
-                              y -= (lineStep + 2);
-                          }
-                          if (!body.isBlank()) {
-                              drawWrapped(cs, FONT_REG, fontSize, x, y, maxW, body, lineStep);
-                          }
-                          break;
-                      }
-                  }
-              }
-          }
-
-          // 2) Totais na página 6: Total Materiais, Total Serviços, Mobilização
-          TotaisDto t = dto.getTotais();
-          if (t != null) {
-              float mLabelX = getF(p6, "materiais.label.x", 420f);
-              float mLabelY = getF(p6, "materiais.label.y", 230f);
-              float mValX   = getF(p6, "materiais.value.x", 560f);
-              float mValY   = getF(p6, "materiais.value.y", 230f);
-
-              float sLabelX = getF(p6, "servicos.label.x", 420f);
-              float sLabelY = getF(p6, "servicos.label.y", 214f);
-              float sValX   = getF(p6, "servicos.value.x", 560f);
-              float sValY   = getF(p6, "servicos.value.y", 214f);
-
-              float mobLabelX = getF(p6, "mobilizacao.label.x", 420f);
-              float mobLabelY = getF(p6, "mobilizacao.label.y", 198f);
-              float mobValX   = getF(p6, "mobilizacao.value.x", 560f);
-              float mobValY   = getF(p6, "mobilizacao.value.y", 198f);
-
-              BR.drawText(cs, FONT_REG, FONT_H, mLabelX, mLabelY, "Total Materiais");
-              BR.drawText(cs, FONT_REG, FONT_H, mValX,   mValY,   BR.moeda(t.getTotalMateriais()));
-
-              BR.drawText(cs, FONT_REG, FONT_H, sLabelX, sLabelY, "Total Serviços");
-              BR.drawText(cs, FONT_REG, FONT_H, sValX,   sValY,   BR.moeda(t.getTotalServicos()));
-
-              BR.drawText(cs, FONT_REG, FONT_H, mobLabelX, mobLabelY, "Mobilização");
-              BR.drawText(cs, FONT_REG, FONT_H, mobValX,   mobValY,   BR.moeda(t.getMobilizacao()));
-          }
-      }
   }
 }
