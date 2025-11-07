@@ -64,8 +64,8 @@
   },
 
   "sections": {
-    "apresentacao-da-empresa":                      { "page": 1,  "x": 70, "y": 480, "maxW": 480, "lineStep": 12, "fontSize": 10 },
-    "1-informacoes-do-sistema":                     { "page": 2,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
+    "apresentacao-da-empresa":                      { "page": 1,  "x": 70, "y": 600, "maxW": 480, "lineStep": 20, "fontSize": 15 },
+    "1-informacoes-do-sistema":                     { "page": 2,  "x": 90, "y": 500, "maxW": 400, "lineStep": 18, "fontSize": 13 },
     "2-preparo-de-superficie":                      { "page": 3,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
     "3-aplicacao-do-sistema":                       { "page": 4,  "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
 
