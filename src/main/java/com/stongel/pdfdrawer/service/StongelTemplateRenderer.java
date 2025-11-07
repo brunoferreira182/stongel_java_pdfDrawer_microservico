@@ -821,10 +821,10 @@ public class StongelTemplateRenderer {
 
   /* =========================== TOTAIS =========================== */
   private static void drawTotalsValuesOnlyAdjusted(PDPageContentStream cs, TotaisDto t,
-                                                   float baseXLabel, float baseXVal,
-                                                   float baseYTop, float stepY,
-                                                   float globalDx, float globalDy,
-                                                   JsonNode ajustes, JsonNode tabsNode) throws IOException {
+																									float baseXLabel, float baseXVal,
+																									float baseYTop, float stepY,
+																									float globalDx, float globalDy,
+																									JsonNode ajustes, JsonNode tabsNode) throws IOException {
       if (t == null) return;
 
       String[] keys = new String[]{ "subtotal", "desconto", "totalMateriais", "totalServicos", "mobilizacao", "totalGeral" };
