@@ -48,7 +48,7 @@
   },
 
   "totaisTables": {
-    "xLabel": 420,
+    "xLabel": 1000,
     "xVal":   560,
     "yTop":   200,
     "step":    16,
@@ -56,12 +56,12 @@
     "valDy":   0,
     "ajustesIndividuais": {
       "subtotal":       { "dx": -100, "dy":  35 },
-      "desconto":       { "dx":    0, "dy":  -4 },
       "totalMateriais": { "dx": -100, "dy": 270 },
       "totalServicos":  { "dx": -100, "dy": 100 },
       "mobilizacao":    { "dx": -150, "dy": 145 }
     }
   },
+
   "sections": {
     "apresentacao-da-empresa":                      { "page": 1,  "x": 70, "y": 600, "maxW": 480, "lineStep": 20, "fontSize": 15 },
     "1-informacoes-do-sistema":                     { "page": 2,  "x": 90, "y": 500, "maxW": 400, "lineStep": 18, "fontSize": 13 },
@@ -82,14 +82,18 @@
     "11-multas-moratorias":                         { "page": 11, "x": 60, "y": 420, "maxW": 480, "lineStep": 18, "fontSize": 11 },
     "12-protecao-de-dados":                         { "page": 11, "x": 65, "y": 280, "maxW": 480, "lineStep": 18, "fontSize": 11 },
 
-    "13-do-foro":                                   { "page": 12, "x": 60, "y": 680, "maxW": 480, "lineStep": 18, "fontSize": 13 }
+    "13-do-foro":                                   { "page": 12, "x": 60, "y": 670, "maxW": 480, "lineStep": 18, "fontSize": 13 }
   },
-    "page6": {
-    "validadeProposta": { "x": 560, "y": 560, "prefix": "Validade: ", "suffix": "", "rightAlign": true },
+
+  "page5": {
+    "validadeProposta": { "x": 350, "y": 267, "prefix": " ", "suffix": "", "rightAlign": true }
+  },
+
+  "page6": {
+    "validadeProposta": { "x": 137, "y": 227, "prefix": " ", "suffix": "", "rightAlign": true },
     "mobilizacaoText": { "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
-    "materiais":   { "label": { "x": 420, "y": 230 }, "value": { "x": 210, "y": 395 } },
-    "servicos":    { "label": { "x": 420, "y": 214 }, "value": { "x": 210, "y": 305} },
+    "materiais": { "label": { "x": 420, "y": 230 }, "value": { "x": 210, "y": 395 } },
+    "servicos":  { "label": { "x": 420, "y": 214 }, "value": { "x": 210, "y": 305 } },
     "mobilizacao": { "label": { "x": 420, "y": 198 }, "value": { "x": 560, "y": 198 } }
   }
-
 }

@@ -175,9 +175,15 @@ public class StongelTemplateRenderer {
                         }
                     }
 
-                    // Totais (página 5) — MANTIDOS
+                    // Totais (página 5) — MANTIDOS (sem "R$")
                     drawTotalsValuesOnlyAdjusted(cs, dto.getTotais(), X_TOT_TAB_LABEL, X_TOT_TAB_VAL,
                             Y_TOT_TAB_TOP, Y_TOT_TAB_STEP, VAL_DX, VAL_DY, AJUSTES_IND, at(cfg, "totaisTables"));
+                }
+
+                // === NOVO: Validade da proposta no ÍNDICE 5 ===
+                if (rawJson != null) {
+                    String validade = text(rawJson, "validadeProposta");
+                    writeValidityAt(doc, 5, cfg, "page5.validadeProposta", validade);
                 }
 
                 // Demais páginas (seções) — não mexe no índice 5
@@ -187,6 +193,12 @@ public class StongelTemplateRenderer {
 
                 // Cópia dos valores na página 6 (Notas Importantes), sem “R$”
                 writePage6TotalsValues(doc, dto.getTotais(), cfg);
+
+                // === NOVO: Validade da proposta no ÍNDICE 6 ===
+                if (rawJson != null) {
+                    String validade = text(rawJson, "validadeProposta");
+                    writeValidityAt(doc, 6, cfg, "page6.validadeProposta", validade);
+                }
 
                 try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                     doc.save(baos);
@@ -225,6 +237,34 @@ public class StongelTemplateRenderer {
             }
             if (hasSrv) {
                 drawRightAligned(cs, fontReg(), FONT_H, xSrv, ySrv, sansCurrency(totais.getTotalServicos()));
+            }
+        }
+    }
+
+    // ====================== NOVO: escreve a validade em uma página específica ======================
+    private void writeValidityAt(PDDocument doc, int pageIndex, JsonNode cfg, String cfgKey, String validade) throws IOException {
+        if (validade == null || validade.isBlank()) return;
+        if (pageIndex < 0 || pageIndex >= doc.getNumberOfPages()) return;
+
+        Float x = getFOrNull(cfg, cfgKey + ".x");
+        Float y = getFOrNull(cfg, cfgKey + ".y");
+        if (x == null || y == null) return;
+
+        String prefix = textCfg(cfg, cfgKey + ".prefix", " ");
+        String suffix = textCfg(cfg, cfgKey + ".suffix", "");
+        boolean rightAlign = boolCfg(cfg, cfgKey + ".rightAlign", true);
+
+        PDPage page = doc.getPage(pageIndex);
+        try (PDPageContentStream cs = new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
+            normalizeToCropBox(cs, page);
+            cs.setNonStrokingColor(BRAND);
+            cs.setStrokingColor(BRAND);
+
+            String txt = sanitizeText(prefix + validade + suffix);
+            if (rightAlign) {
+                drawRightAligned(cs, fontReg(), FONT_H, x, y, txt);
+            } else {
+                BR.drawText(cs, fontReg(), FONT_H, x, y, txt);
             }
         }
     }
@@ -1015,6 +1055,16 @@ public class StongelTemplateRenderer {
         return (j != null && !j.isMissingNode() && !j.isNull()) ? j.asText() : null;
     }
 
+    private String textCfg(JsonNode n, String path, String def) {
+        JsonNode j = at(n, path);
+        return (j != null && j.isTextual() && !j.asText().isBlank()) ? j.asText() : def;
+    }
+
+    private boolean boolCfg(JsonNode n, String path, boolean def) {
+        JsonNode j = at(n, path);
+        return (j != null && j.isBoolean()) ? j.asBoolean() : def;
+        }
+
     private BigDecimal number(JsonNode n, String path) {
         JsonNode j = at(n, path);
         if (j == null || j.isNull() || j.isMissingNode()) return BigDecimal.ZERO;
@@ -1093,7 +1143,6 @@ public class StongelTemplateRenderer {
     private static String sansCurrency(Number n) {
         String s = BR.moeda(n);
         if (s == null) return "-";
-        // remove R$ + espaços normais ou NBSP
         s = s.replace('\u00A0', ' ').replaceAll("^\\s*R\\$\\s*", "");
         return s.trim();
     }
