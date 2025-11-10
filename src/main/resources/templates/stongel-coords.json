@@ -69,19 +69,19 @@
     "2-preparo-de-superficie":                      { "page": 3,  "x": 90, "y": 500, "maxW": 400, "lineStep": 18, "fontSize": 13 },
     "3-aplicacao-do-sistema":                       { "page": 4,  "x": 90, "y": 500, "maxW": 400, "lineStep": 18, "fontSize": 13 },
 
-    "4-notas-importantes":                          { "page": 6,  "x": 20, "y": 580, "maxW": 560, "lineStep": 18, "fontSize": 13 },
-    "5-mobilizacao-agendamento-e-execucao-da-obra": { "page": 7,  "x": 60, "y": 480, "maxW": 480, "lineStep": 18, "fontSize": 13 },
+    "4-notas-importantes":                          { "page": 6,  "x": 20, "y": 580, "maxW": 560, "lineStep": 14, "fontSize": 9 },
+    "5-mobilizacao-agendamento-e-execucao-da-obra": { "page": 7,  "x": 75, "y": 550, "maxW": 400, "lineStep": 16, "fontSize": 13 },
 
-    "6-responsabilidade-da-contratante":            { "page": 8,  "x": 60, "y": 640, "maxW": 480, "lineStep": 18, "fontSize": 13 },
+    "6-responsabilidade-da-contratante":            { "page": 8,  "x": 55, "y": 565, "maxW": 450, "lineStep": 21, "fontSize": 12 },
 
-    "7-responsabilidade-da-contratada":             { "page": 9,  "x": 60, "y": 640, "maxW": 480, "lineStep": 18, "fontSize": 13 },
-    "8-condicoes-do-substrato":                     { "page": 9,  "x": 60, "y": 480, "maxW": 480, "lineStep": 18, "fontSize": 13 },
+    "7-responsabilidade-da-contratada":             { "page": 9,  "x": 60, "y": 590, "maxW": 480, "lineStep": 18, "fontSize": 13 },
+    "8-condicoes-do-substrato":                     { "page": 9,  "x": 60, "y": 390, "maxW": 480, "lineStep": 21, "fontSize": 13 },
 
-    "9-termos-de-garantia":                         { "page": 10, "x": 60, "y": 640, "maxW": 480, "lineStep": 18, "fontSize": 13 },
+    "9-termos-de-garantia":                         { "page": 10, "x": 55, "y": 640, "maxW": 480, "lineStep": 18, "fontSize": 11 },
 
-    "10-rescisao":                                  { "page": 11, "x": 60, "y": 640, "maxW": 480, "lineStep": 18, "fontSize": 13 },
-    "11-multas-moratorias":                         { "page": 11, "x": 60, "y": 480, "maxW": 480, "lineStep": 18, "fontSize": 13 },
-    "12-protecao-de-dados":                         { "page": 11, "x": 60, "y": 320, "maxW": 480, "lineStep": 18, "fontSize": 13 },
+    "10-rescisao":                                  { "page": 11, "x": 60, "y": 630, "maxW": 480, "lineStep": 18, "fontSize": 11 },
+    "11-multas-moratorias":                         { "page": 11, "x": 60, "y": 420, "maxW": 480, "lineStep": 18, "fontSize": 11 },
+    "12-protecao-de-dados":                         { "page": 11, "x": 65, "y": 280, "maxW": 480, "lineStep": 18, "fontSize": 11 },
 
     "13-do-foro":                                   { "page": 12, "x": 60, "y": 640, "maxW": 480, "lineStep": 18, "fontSize": 13 }
   },
