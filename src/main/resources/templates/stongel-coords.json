@@ -2,10 +2,10 @@
   "pageIndexes": { "headerTotais": 0, "tables": 6 },
 
   "empresa": {
-    "razao":   { "x": 120, "y": 175 },
+    "razao":   { "x": 125, "y": 175 },
     "cnpj":    { "x": 95,  "y": 155 },
-    "contato": { "x": 100, "y": 135 },
-    "tel":     { "x": 100, "y": 115 },
+    "contato": { "x": 105, "y": 135 },
+    "tel":     { "x": 105, "y": 115 },
     "email":   { "x": 100, "y": 95  }
   },
 

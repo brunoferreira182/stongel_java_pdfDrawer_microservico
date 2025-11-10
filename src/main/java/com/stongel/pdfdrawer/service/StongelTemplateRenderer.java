@@ -228,12 +228,12 @@ public class StongelTemplateRenderer {
         boolean hasMob = xMobF != null && yMobF != null;
         if (!hasMat && !hasSrv && !hasMob) return;
 
-        float xMat = hasMat ? xMatF.floatValue() : 0f;
-        float yMat = hasMat ? yMatF.floatValue() : 0f;
-        float xSrv = hasSrv ? xSrvF.floatValue() : 0f;
-        float ySrv = hasSrv ? ySrvF.floatValue() : 0f;
-        float xMob = hasMob ? xMobF.floatValue() : 0f;
-        float yMob = hasMob ? yMobF.floatValue() : 0f;
+        final float xMat = hasMat ? xMatF.floatValue() : 0f;
+        final float yMat = hasMat ? yMatF.floatValue() : 0f;
+        final float xSrv = hasSrv ? xSrvF.floatValue() : 0f;
+        final float ySrv = hasSrv ? ySrvF.floatValue() : 0f;
+        final float xMob = hasMob ? xMobF.floatValue() : 0f;
+        final float yMob = hasMob ? yMobF.floatValue() : 0f;
 
         PDPage page = doc.getPage(pageIndex);
         try (PDPageContentStream cs = new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
@@ -483,7 +483,7 @@ public class StongelTemplateRenderer {
                 normalizeToCropBox(cs, page);
                 if (debugGrid) drawGrid(cs, page, gridStep, gridMajor);
                 cs.setNonStrokingColor(DEFAULT_COLOR); cs.setStrokingColor(DEFAULT_COLOR);
-                float cursorY = renderHtmlBlock(cs, html, x, startY, maxW, fontSize, lineStep, 60f);
+                float cursorY = renderHtmlBlock(cs, html, x, startY, maxW, fontSize, lineStep, MARGIN_BOTTOM);
                 pageCursorY.put(pageIndex, cursorY);
             }
         }
