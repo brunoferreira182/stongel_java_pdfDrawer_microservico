@@ -62,17 +62,16 @@
       "mobilizacao":    { "dx": -150, "dy": 145 }
     }
   },
-
   "sections": {
     "apresentacao-da-empresa":                      { "page": 1,  "x": 70, "y": 600, "maxW": 480, "lineStep": 20, "fontSize": 15 },
     "1-informacoes-do-sistema":                     { "page": 2,  "x": 90, "y": 500, "maxW": 400, "lineStep": 18, "fontSize": 13 },
     "2-preparo-de-superficie":                      { "page": 3,  "x": 90, "y": 500, "maxW": 400, "lineStep": 18, "fontSize": 13 },
     "3-aplicacao-do-sistema":                       { "page": 4,  "x": 90, "y": 500, "maxW": 400, "lineStep": 18, "fontSize": 13 },
 
-    "4-notas-importantes":                          { "page": 6,  "x": 20, "y": 580, "maxW": 560, "lineStep": 14, "fontSize": 9 },
+    "4-notas-importantes":                          { "page": 6,  "x": 20, "y": 580, "maxW": 560, "lineStep": 12, "fontSize": 9 },
     "5-mobilizacao-agendamento-e-execucao-da-obra": { "page": 7,  "x": 75, "y": 550, "maxW": 400, "lineStep": 16, "fontSize": 13 },
 
-    "6-responsabilidade-da-contratante":            { "page": 8,  "x": 55, "y": 565, "maxW": 450, "lineStep": 21, "fontSize": 12 },
+    "6-responsabilidade-da-contratante":            { "page": 8,  "x": 55, "y": 565, "maxW": 450, "lineStep": 21, "fontSize": 11 },
 
     "7-responsabilidade-da-contratada":             { "page": 9,  "x": 60, "y": 590, "maxW": 480, "lineStep": 18, "fontSize": 13 },
     "8-condicoes-do-substrato":                     { "page": 9,  "x": 60, "y": 390, "maxW": 480, "lineStep": 21, "fontSize": 13 },
@@ -83,12 +82,13 @@
     "11-multas-moratorias":                         { "page": 11, "x": 60, "y": 420, "maxW": 480, "lineStep": 18, "fontSize": 11 },
     "12-protecao-de-dados":                         { "page": 11, "x": 65, "y": 280, "maxW": 480, "lineStep": 18, "fontSize": 11 },
 
-    "13-do-foro":                                   { "page": 12, "x": 60, "y": 640, "maxW": 480, "lineStep": 18, "fontSize": 13 }
+    "13-do-foro":                                   { "page": 12, "x": 60, "y": 680, "maxW": 480, "lineStep": 18, "fontSize": 13 }
   },
     "page6": {
+    "validadeProposta": { "x": 560, "y": 560, "prefix": "Validade: ", "suffix": "", "rightAlign": true },
     "mobilizacaoText": { "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
-    "materiais":   { "label": { "x": 420, "y": 230 }, "value": { "x": 560, "y": 230 } },
-    "servicos":    { "label": { "x": 420, "y": 214 }, "value": { "x": 560, "y": 214 } },
+    "materiais":   { "label": { "x": 420, "y": 230 }, "value": { "x": 210, "y": 395 } },
+    "servicos":    { "label": { "x": 420, "y": 214 }, "value": { "x": 210, "y": 305} },
     "mobilizacao": { "label": { "x": 420, "y": 198 }, "value": { "x": 560, "y": 198 } }
   }
 

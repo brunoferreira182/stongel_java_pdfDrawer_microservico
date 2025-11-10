@@ -34,8 +34,10 @@ public class StongelTemplateRenderer {
     private static final byte[] FONT_MONO_BYTES = FONT_REG_BYTES;
     private static final float FONT_H = 10f;
 
-    private final ThreadLocal<Fonts> fontContext = new ThreadLocal<>();
+    // ================== COR DA MARCA (APLICADA AOS TEXTOS) ==================
+    private static final Color BRAND = new Color(0x22, 0x48, 0x7f); // #22487f
 
+    private final ThreadLocal<Fonts> fontContext = new ThreadLocal<>();
     private final ObjectMapper om = new ObjectMapper();
 
     public byte[] renderFromOrcamentoJson(String json) throws Exception {
@@ -57,6 +59,7 @@ public class StongelTemplateRenderer {
         }
 
         int PAGE_IDX_HEADER_TOTAIS = getInt(cfg, "pageIndexes.headerTotais", 0);
+        // Mantém a página das tabelas fixa no índice 5
         int PAGE_IDX_TABELAS = 5;
 
         // Coordenadas empresa
@@ -82,21 +85,6 @@ public class StongelTemplateRenderer {
         float L_MAIL_X = getF(cfg, "labels.page1.email.x", -10000f);
         float L_MAIL_Y = getF(cfg, "labels.page1.email.y", -10000f);
 
-        // Layout antigo
-        float X_COL_DESC_OLD = getF(cfg, "tabelas.cols.desc", 60f);
-        float X_COL_COMP_OLD = getF(cfg, "tabelas.cols.comp", 300f);
-        float X_COL_UN_OLD = getF(cfg, "tabelas.cols.un", 340f);
-        float X_COL_QTD_OLD = getF(cfg, "tabelas.cols.qtd", 380f);
-        float X_COL_CUSTO_OLD = getF(cfg, "tabelas.cols.custo", 420f);
-        float X_COL_PRECO_OLD = getF(cfg, "tabelas.cols.preco", 470f);
-        float X_COL_DESC_LIM_OLD = getF(cfg, "tabelas.cols.descLim", 530f);
-        float X_COL_PRECO_KG_OLD = getF(cfg, "tabelas.cols.precoKg", 585f);
-        float Y_MAT_FIRSTLINE_OLD = getF(cfg, "tabelas.materiais.yFirst", 598f);
-        float Y_SRV_FIRSTLINE_OLD = getF(cfg, "tabelas.servicos.yFirst", 328f);
-        float Y_ROW_STEP_OLD = getF(cfg, "tabelas.materiais.rowStep", 16f);
-        float Y_MIN_MAT_OLD = getF(cfg, "tabelas.materiais.yMin", 380f);
-        float Y_MIN_SRV_OLD = getF(cfg, "tabelas.servicos.yMin", 190f);
-
         // Layout novo
         JsonNode L_MAT = at(cfg, "layout.materiais");
         float MAT_QTD_RIGHT = getF(L_MAT, "xQtdRight", 65f);
@@ -105,8 +93,8 @@ public class StongelTemplateRenderer {
         float MAT_DESC_MAXW = getF(L_MAT, "descMaxWidth", 360f);
         float MAT_SUBT_RIGHT = getF(L_MAT, "xSubtotalRight", 510f);
         float MAT_Y_FIRST = getF(L_MAT, "yFirst", 555f);
-        float MAT_Y_MIN = getF(L_MAT, "yMin", 380f);
         float MAT_ROW_STEP = getF(L_MAT, "rowStep", 16f);
+        float MAT_Y_MIN = getF(L_MAT, "yMin", 380f);
         float MAT_DESC_DX = getF(L_MAT, "descDx", -30f);
         float MAT_DESC_DY = getF(L_MAT, "descDy", 0f);
 
@@ -118,12 +106,12 @@ public class StongelTemplateRenderer {
         float SRV_CUSTO_U_RIGHT = getF(L_SRV, "xCustoUnitRight", 470f);
         float SRV_SUBT_RIGHT = getF(L_SRV, "xSubtotalRight", 565f);
         float SRV_Y_FIRST = getF(L_SRV, "yFirst", 380f);
-        float SRV_Y_MIN = getF(L_SRV, "yMin", 190f);
         float SRV_ROW_STEP = getF(L_SRV, "rowStep", 16f);
+        float SRV_Y_MIN = getF(L_SRV, "yMin", 190f);
         float SRV_DESC_DX = getF(L_SRV, "descDx", -30f);
         float SRV_DESC_DY = getF(L_SRV, "descDy", 0f);
 
-        // Totais
+        // Totais (página 5 – manter)
         float X_TOT_TAB_LABEL = getF(cfg, "totaisTables.xLabel", 420f);
         float X_TOT_TAB_VAL = getF(cfg, "totaisTables.xVal", 560f);
         float Y_TOT_TAB_TOP = getF(cfg, "totaisTables.yTop", 200f);
@@ -147,6 +135,9 @@ public class StongelTemplateRenderer {
                         drawGrid(cs, pageHeader, gridStep, gridMajor);
                         drawProbes(cs, cfg.path("probes").path("page1"));
                     }
+                    cs.setNonStrokingColor(BRAND);
+                    cs.setStrokingColor(BRAND);
+
                     EmpresaDto emp = dto.getEmpresa();
                     BR.drawText(cs, fontReg(), FONT_H, L_RAZAO_X, L_RAZAO_Y, "Razão Social:");
                     BR.drawText(cs, fontReg(), FONT_H, L_CNPJ_X, L_CNPJ_Y, "CNPJ:");
@@ -160,7 +151,7 @@ public class StongelTemplateRenderer {
                     BR.drawText(cs, fontReg(), FONT_H, X_EMP_EMAIL, Y_EMP_EMAIL, emp != null ? emp.getEmail() : "-");
                 }
 
-                // Página de tabelas (forçada página 6)
+                // Página das tabelas — ÍNDICE 5 (mantida)
                 PDPage pageTab = doc.getPage(PAGE_IDX_TABELAS);
                 try (PDPageContentStream cs = new PDPageContentStream(doc, pageTab, AppendMode.APPEND, true, true)) {
                     normalizeToCropBox(cs, pageTab);
@@ -168,6 +159,8 @@ public class StongelTemplateRenderer {
                         drawGrid(cs, pageTab, gridStep, gridMajor);
                         drawProbes(cs, cfg.path("probes").path("pageTables"));
                     }
+                    cs.setNonStrokingColor(BRAND);
+                    cs.setStrokingColor(BRAND);
 
                     boolean hasNewLayout = (L_MAT != null && !L_MAT.isMissingNode()) || (L_SRV != null && !L_SRV.isMissingNode());
                     if (hasNewLayout) {
@@ -180,26 +173,20 @@ public class StongelTemplateRenderer {
                                     SRV_QTD_RIGHT, SRV_UN_X, SRV_DESC_X + SRV_DESC_DX, SRV_DESC_MAXW,
                                     SRV_CUSTO_U_RIGHT, SRV_SUBT_RIGHT, SRV_DESC_DY);
                         }
-                    } else {
-                        if (hasItems(dto.getMateriais())) {
-                            drawTableRowsOld(cs, dto.getMateriais(), Y_MAT_FIRSTLINE_OLD, Y_ROW_STEP_OLD, Y_MIN_MAT_OLD,
-                                    X_COL_DESC_OLD, X_COL_COMP_OLD, X_COL_UN_OLD, X_COL_QTD_OLD,
-                                    X_COL_CUSTO_OLD, X_COL_PRECO_OLD, X_COL_DESC_LIM_OLD, X_COL_PRECO_KG_OLD);
-                        }
-                        if (hasItems(dto.getServicos())) {
-                            drawTableRowsOld(cs, dto.getServicos(), Y_SRV_FIRSTLINE_OLD, Y_ROW_STEP_OLD, Y_MIN_SRV_OLD,
-                                    X_COL_DESC_OLD, X_COL_COMP_OLD, X_COL_UN_OLD, X_COL_QTD_OLD,
-                                    X_COL_CUSTO_OLD, X_COL_PRECO_OLD, X_COL_DESC_LIM_OLD, X_COL_PRECO_KG_OLD);
-                        }
                     }
 
+                    // Totais (página 5) — MANTIDOS
                     drawTotalsValuesOnlyAdjusted(cs, dto.getTotais(), X_TOT_TAB_LABEL, X_TOT_TAB_VAL,
                             Y_TOT_TAB_TOP, Y_TOT_TAB_STEP, VAL_DX, VAL_DY, AJUSTES_IND, at(cfg, "totaisTables"));
                 }
 
+                // Demais páginas (seções) — não mexe no índice 5
                 if (rawJson != null) {
                     renderSections(doc, rawJson, cfg, PAGE_IDX_HEADER_TOTAIS, PAGE_IDX_TABELAS, debugGrid, gridStep, gridMajor);
                 }
+
+                // Cópia dos valores na página 6 (Notas Importantes), sem “R$”
+                writePage6TotalsValues(doc, dto.getTotais(), cfg);
 
                 try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                     doc.save(baos);
@@ -207,6 +194,37 @@ public class StongelTemplateRenderer {
                 }
             } finally {
                 fontContext.remove();
+            }
+        }
+    }
+
+    // ====================== ADIÇÃO: VALORES (SEM PREFIXO) NA PAGE 6 ======================
+    private void writePage6TotalsValues(PDDocument doc, TotaisDto totais, JsonNode cfg) throws IOException {
+        if (totais == null) return;
+
+        int pageIndex = getInt(cfg, "sections.4-notas-importantes.page", 6);
+        if (pageIndex < 0 || pageIndex >= doc.getNumberOfPages()) return;
+
+        Float xMat = getFOrNull(cfg, "page6.materiais.value.x");
+        Float yMat = getFOrNull(cfg, "page6.materiais.value.y");
+        Float xSrv = getFOrNull(cfg, "page6.servicos.value.x");
+        Float ySrv = getFOrNull(cfg, "page6.servicos.value.y");
+
+        boolean hasMat = xMat != null && yMat != null;
+        boolean hasSrv = xSrv != null && ySrv != null;
+        if (!hasMat && !hasSrv) return;
+
+        PDPage page = doc.getPage(pageIndex);
+        try (PDPageContentStream cs = new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
+            normalizeToCropBox(cs, page);
+            cs.setNonStrokingColor(BRAND);
+            cs.setStrokingColor(BRAND);
+
+            if (hasMat) {
+                drawRightAligned(cs, fontReg(), FONT_H, xMat, yMat, sansCurrency(totais.getTotalMateriais()));
+            }
+            if (hasSrv) {
+                drawRightAligned(cs, fontReg(), FONT_H, xSrv, ySrv, sansCurrency(totais.getTotalServicos()));
             }
         }
     }
@@ -220,9 +238,9 @@ public class StongelTemplateRenderer {
     }
 
     private void drawMaterialsRowsV2(PDPageContentStream cs, List<ItemDto> itens,
-                                             float yStart, float rowStep, float yMin,
-                                             float xQtdRight, float xUn, float xDesc, float descMaxWidth,
-                                             float xSubtotalRight, float descDy) throws IOException {
+                                     float yStart, float rowStep, float yMin,
+                                     float xQtdRight, float xUn, float xDesc, float descMaxWidth,
+                                     float xSubtotalRight, float descDy) throws IOException {
         if (itens == null || itens.isEmpty()) return;
         float y = yStart;
         for (ItemDto it : itens) {
@@ -230,20 +248,22 @@ public class StongelTemplateRenderer {
             drawRightAligned(cs, fontReg(), FONT_H, xQtdRight, y, BR.numero(it.getQuantidade()));
             BR.drawText(cs, fontReg(), FONT_H, xUn, y, safe(it.getUnidade()));
             drawWrapped(cs, fontReg(), FONT_H, xDesc, y + descDy, descMaxWidth, safe(it.getDescricao()), 10f);
+
             double subtotal = (it.getPrecoVenda() != null && it.getPrecoVenda().doubleValue() > 0)
                     ? it.getPrecoVenda().doubleValue()
                     : ((it.getCusto() != null && it.getQuantidade() != null)
                     ? it.getCusto().doubleValue() * it.getQuantidade().doubleValue()
                     : 0.0);
-            drawRightAligned(cs, fontReg(), FONT_H, xSubtotalRight, y, BR.moeda(subtotal));
+
+            drawRightAligned(cs, fontReg(), FONT_H, xSubtotalRight, y, sansCurrency(subtotal));
             y -= rowStep;
         }
     }
 
     private void drawServicesRowsV2(PDPageContentStream cs, List<ItemDto> itens,
-                                            float yStart, float rowStep, float yMin,
-                                            float xQtdRight, float xUn, float xDesc, float descMaxWidth,
-                                            float xCustoUnitRight, float xSubtotalRight, float descDy) throws IOException {
+                                    float yStart, float rowStep, float yMin,
+                                    float xQtdRight, float xUn, float xDesc, float descMaxWidth,
+                                    float xCustoUnitRight, float xSubtotalRight, float descDy) throws IOException {
         if (itens == null || itens.isEmpty()) return;
         float y = yStart;
         for (ItemDto it : itens) {
@@ -251,27 +271,29 @@ public class StongelTemplateRenderer {
             drawRightAligned(cs, fontReg(), FONT_H, xQtdRight, y, BR.numero(it.getQuantidade()));
             BR.drawText(cs, fontReg(), FONT_H, xUn, y, safe(it.getUnidade()));
             drawWrapped(cs, fontReg(), FONT_H, xDesc, y + descDy, descMaxWidth, safe(it.getDescricao()), 10f);
+
             double custoU = 0.0;
             if (it.getPrecoVenda() != null && it.getQuantidade() != null && it.getQuantidade().doubleValue() > 0) {
                 custoU = it.getPrecoVenda().doubleValue() / it.getQuantidade().doubleValue();
             } else if (it.getCusto() != null && it.getQuantidade() != null && it.getQuantidade().doubleValue() > 0) {
                 custoU = it.getCusto().doubleValue() / it.getQuantidade().doubleValue();
             }
-            drawRightAligned(cs, fontReg(), FONT_H, xCustoUnitRight, y, BR.moeda(custoU));
+            drawRightAligned(cs, fontReg(), FONT_H, xCustoUnitRight, y, sansCurrency(custoU));
+
             double subtotal = (it.getPrecoVenda() != null && it.getPrecoVenda().doubleValue() > 0)
                     ? it.getPrecoVenda().doubleValue()
                     : ((it.getCusto() != null && it.getQuantidade() != null)
                     ? it.getCusto().doubleValue() * it.getQuantidade().doubleValue()
                     : 0.0);
-            drawRightAligned(cs, fontReg(), FONT_H, xSubtotalRight, y, BR.moeda(subtotal));
+            drawRightAligned(cs, fontReg(), FONT_H, xSubtotalRight, y, sansCurrency(subtotal));
             y -= rowStep;
         }
     }
 
     private void drawTableRowsOld(PDPageContentStream cs, List<ItemDto> itens,
-                                          float yStart, float rowStep, float yMin,
-                                          float xDesc, float xComp, float xUn, float xQtd,
-                                          float xCusto, float xPreco, float xDescLim, float xPrecoKg) throws IOException {
+                                  float yStart, float rowStep, float yMin,
+                                  float xDesc, float xComp, float xUn, float xQtd,
+                                  float xCusto, float xPreco, float xDescLim, float xPrecoKg) throws IOException {
         if (itens == null || itens.isEmpty()) return;
         float y = yStart;
         for (ItemDto it : itens) {
@@ -280,15 +302,48 @@ public class StongelTemplateRenderer {
             BR.drawText(cs, fontReg(), FONT_H, xComp, y, safe(it.getComp()));
             BR.drawText(cs, fontReg(), FONT_H, xUn, y, safe(it.getUnidade()));
             drawRightAligned(cs, fontReg(), FONT_H, xQtd, y, BR.numero(it.getQuantidade()));
-            drawRightAligned(cs, fontReg(), FONT_H, xCusto, y, BR.moeda(it.getCusto()));
-            drawRightAligned(cs, fontReg(), FONT_H, xPreco, y, BR.moeda(it.getPrecoVenda()));
+
+            drawRightAligned(cs, fontReg(), FONT_H, xCusto, y, sansCurrency(it.getCusto()));
+            drawRightAligned(cs, fontReg(), FONT_H, xPreco, y, sansCurrency(it.getPrecoVenda()));
+
             String descPerc = (it.getLimiteDesconto() != null) ? it.getLimiteDesconto().toString() + "%" : "-";
             drawRightAligned(cs, fontReg(), FONT_H, xDescLim, y, descPerc);
-            drawRightAligned(cs, fontReg(), FONT_H, xPrecoKg, y, BR.moeda(it.getPrecoKg()));
+
+            drawRightAligned(cs, fontReg(), FONT_H, xPrecoKg, y, sansCurrency(it.getPrecoKg()));
             y -= rowStep;
         }
     }
 
+    private void drawTotalsValuesOnlyAdjusted(PDPageContentStream cs, TotaisDto t,
+                                              float baseXLabel, float baseXVal,
+                                              float baseYTop, float stepY,
+                                              float globalDx, float globalDy,
+                                              JsonNode ajustesInd, JsonNode totalTableCfg) throws IOException {
+        if (t == null) return;
+
+        cs.setNonStrokingColor(BRAND);
+        cs.setStrokingColor(BRAND);
+
+        String[] keys = new String[]{ "subtotal", "desconto", "totalMateriais", "totalServicos", "mobilizacao", "totalGeral" };
+        for (int i = 0; i < keys.length; i++) {
+            String key = keys[i];
+            BigDecimal valor = getValorPorChave(t, key);
+            if (valor == null) valor = BigDecimal.ZERO;
+
+            float yLabel = baseYTop - (i * stepY);
+            String label = formatLabel(key);
+            BR.drawText(cs, fontReg(), FONT_H, baseXLabel, yLabel, label);
+
+            float dx = globalDx + getAdj(ajustesInd, key, "dx");
+            float dy = globalDy + getAdj(ajustesInd, key, "dy");
+            float xVal = baseXVal + dx;
+            float yVal = yLabel + dy;
+
+            BR.drawText(cs, fontReg(), FONT_H, xVal, yVal, sansCurrency(valor));
+        }
+    }
+
+    // ---------- helpers de desenho ----------
     private static void drawRightAligned(PDPageContentStream cs, PDFont font, float fontSize,
                                          float xRight, float y, String text) throws IOException {
         if (text == null) text = "-";
@@ -345,7 +400,7 @@ public class StongelTemplateRenderer {
             String slug = it.next();
             JsonNode cfgSec = sectionsCfg.path(slug);
             int pageIndex = cfgSec.path("page").asInt();
-            if (pageIndex == idxHeader || pageIndex == idxTables) continue;
+            if (pageIndex == idxHeader || pageIndex == idxTables) continue; // não toca na 5
             if (pageIndex < 0 || pageIndex >= doc.getNumberOfPages()) continue;
 
             float x = (float) cfgSec.path("x").asDouble(60);
@@ -359,26 +414,28 @@ public class StongelTemplateRenderer {
                 startY = Math.min(pageCursorY.get(pageIndex) - BETWEEN_PARAGRAPHS, startY);
             }
 
+            String html = getSectionHtml(raw, bySlug, slug);
+            if (html == null || html.isBlank()) {
+                pageCursorY.put(pageIndex, startY);
+                continue;
+            }
+
             PDPage page = doc.getPage(pageIndex);
             try (PDPageContentStream cs = new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
                 normalizeToCropBox(cs, page);
                 if (debugGrid) drawGrid(cs, page, gridStep, gridMajor);
 
-                JsonNode sec = bySlug.get(slug);
-                if (sec == null) {
-                    pageCursorY.put(pageIndex, startY);
-                    continue;
-                }
+                cs.setNonStrokingColor(BRAND);
+                cs.setStrokingColor(BRAND);
 
-                String html = sec.path("descricao").asText("");
                 float cursorY = startY;
-
-
                 cursorY = renderHtmlBlock(cs, html, x, cursorY, maxW, fontSize, lineStep, MARGIN_BOTTOM);
                 pageCursorY.put(pageIndex, cursorY);
             }
         }
     }
+
+    // ======== seção/HTML helpers ========
 
     private static class Span {
         final String text;
@@ -455,11 +512,11 @@ public class StongelTemplateRenderer {
                 }
                 case OL: {
                     List<String> lis = extractLi(b.innerHtml);
-                    orderedListCounter = 0;
+                    int cnt = 0;
                     for (String li : lis) {
-                        orderedListCounter++;
+                        cnt++;
                         List<Span> spans = new ArrayList<>();
-                        spans.add(new Span(orderedListCounter + ". ", fontBold(), baseFs, false, 0));
+                        spans.add(new Span(cnt + ". ", fontBold(), baseFs, false, 0));
                         spans.addAll(tokenizeInline(li, fontReg(), baseFs));
                         y = drawWrappedStyledLine(cs, x + 12f, y, maxW - 12f, spans, lineStep);
                         if (y < marginBottom) break;
@@ -689,6 +746,9 @@ public class StongelTemplateRenderer {
     }
 
     private void drawSpans(PDPageContentStream cs, float x, float y, List<Span> spans) throws IOException {
+        cs.setNonStrokingColor(BRAND);
+        cs.setStrokingColor(BRAND);
+
         float cursorX = x;
         for (Span sp : spans) {
             BR.drawText(cs, sp.font, sp.fs, cursorX, y, sp.text);
@@ -725,28 +785,6 @@ public class StongelTemplateRenderer {
             }
         }
         return sb.toString();
-    }
-
-    private void drawTotalsValuesOnlyAdjusted(PDPageContentStream cs, TotaisDto t,
-                                                     float baseXLabel, float baseXVal,
-                                                     float baseYTop, float stepY,
-                                                     float globalDx, float globalDy,
-                                                     JsonNode ajustesInd, JsonNode totalTableCfg) throws IOException {
-        if (t == null) return;
-        String[] keys = new String[]{ "subtotal", "desconto", "totalMateriais", "totalServicos", "mobilizacao", "totalGeral" };
-        for (int i = 0; i < keys.length; i++) {
-            String key = keys[i];
-            BigDecimal valor = getValorPorChave(t, key);
-            if (valor == null) valor = BigDecimal.ZERO;
-            float yLabel = baseYTop - (i * stepY);
-            String label = formatLabel(key);
-            BR.drawText(cs, fontReg(), FONT_H, baseXLabel, yLabel, label);
-            float dx = globalDx + getAdj(ajustesInd, key, "dx");
-            float dy = globalDy + getAdj(ajustesInd, key, "dy");
-            float xVal = baseXVal + dx;
-            float yVal = yLabel + dy;
-            BR.drawText(cs, fontReg(), FONT_H, xVal, yVal, BR.moeda(valor));
-        }
     }
 
     private static String formatLabel(String key) {
@@ -821,6 +859,7 @@ public class StongelTemplateRenderer {
             cs.setLineWidth(0.8f);
             cs.moveTo(x - 4, y); cs.lineTo(x + 4, y); cs.stroke();
             cs.moveTo(x, y - 4); cs.lineTo(x, y + 4); cs.stroke();
+            cs.setNonStrokingColor(BRAND);
             BR.drawText(cs, fontReg(), 8f, x + 6, y + 2, label);
         }
     }
@@ -865,7 +904,7 @@ public class StongelTemplateRenderer {
             return new ObjectMapper().readTree(is);
         } catch (Exception e) {
             try {
-                return new ObjectMapper().readTree("{\"pageIndexes\":{\"headerTotais\":0,\"tables\":5}}");
+                return new ObjectMapper().readTree("{\"pageIndexes\":{\"headerTotais\":0}}");
             } catch (IOException ex) {
                 throw new RuntimeException("Falha ao carregar stongel-coords.json", ex);
             }
@@ -1013,6 +1052,12 @@ public class StongelTemplateRenderer {
         return (j != null && j.isNumber()) ? (float) j.asDouble() : def;
     }
 
+    private static Float getFOrNull(JsonNode n, String path) {
+        if (n == null) return null;
+        JsonNode j = at(n, path);
+        return (j != null && j.isNumber()) ? (float) j.asDouble() : null;
+    }
+
     private static JsonNode at(JsonNode n, String path) {
         if (n == null) return null;
         String[] ps = path.split("\\.");
@@ -1042,5 +1087,55 @@ public class StongelTemplateRenderer {
         if (ajustes == null || ajustes.isMissingNode()) return 0f;
         JsonNode node = ajustes.path(key).path(axis);
         return node.isNumber() ? (float) node.asDouble() : 0f;
+    }
+
+    // ========== FORMATAÇÃO SEM PREFIXO "R$" ==========
+    private static String sansCurrency(Number n) {
+        String s = BR.moeda(n);
+        if (s == null) return "-";
+        // remove R$ + espaços normais ou NBSP
+        s = s.replace('\u00A0', ' ').replaceAll("^\\s*R\\$\\s*", "");
+        return s.trim();
+    }
+
+    // ======== util p/ pegar HTML de uma seção (evita erro "undefined") ========
+    private String getSectionHtml(JsonNode raw, Map<String, JsonNode> bySlug, String slug) {
+        JsonNode sec = null;
+
+        if (bySlug != null) {
+            sec = bySlug.get(slug);
+        }
+
+        if (sec == null && raw != null && raw.has("sections") && raw.get("sections").isArray()) {
+            for (JsonNode s : raw.get("sections")) {
+                if (slug.equals(text(s, "slug"))) {
+                    sec = s;
+                    break;
+                }
+            }
+        }
+
+        if (sec == null) return null;
+
+        String html = firstNonEmptyText(sec,
+                "html","content.html","content","texto","text","descricao","description","body"
+        );
+
+        if (html == null || html.isBlank()) return null;
+
+        boolean seemsHtml = html.trim().matches("(?is).*</?[a-z][\\s\\S]*>.*");
+        if (!seemsHtml) {
+            html = "<p>" + html.replace("\n", "<br/>") + "</p>";
+        }
+        return html;
+    }
+
+    private String firstNonEmptyText(JsonNode n, String... paths) {
+        if (n == null) return null;
+        for (String p : paths) {
+            String v = text(n, p);
+            if (v != null && !v.isBlank()) return v;
+        }
+        return null;
     }
 }
