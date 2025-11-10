@@ -30,7 +30,9 @@
       "descDy": 0,
       "yFirst": 555,
       "rowStep": 16,
-      "yMin": 380
+      "yMin": 380,
+
+      "valuesStyle": { "font": "bold", "color": "#000000" }
     },
     "servicos": {
       "xQtdRight": 65,
@@ -43,7 +45,9 @@
       "descDy": 0,
       "yFirst": 380,
       "rowStep": 16,
-      "yMin": 190
+      "yMin": 190,
+
+      "valuesStyle": { "font": "regular", "color": "#000000" }
     }
   },
 
@@ -54,11 +58,12 @@
     "step":    16,
     "valDx":   0,
     "valDy":   0,
+
     "ajustesIndividuais": {
-      "subtotal":       { "dx": -100, "dy":  35 },
-      "totalMateriais": { "dx": -100, "dy": 270 },
-      "totalServicos":  { "dx": -100, "dy": 100 },
-      "mobilizacao":    { "dx": -150, "dy": 145 }
+      "subtotal":       { "dx": -100, "dy":  35, "bold": true,  "color": "#ffffff" },
+      "totalMateriais": { "dx": -100, "dy": 253, "font":"bold", "colorHex": "#ffffff" },
+      "totalServicos":  { "dx": -100, "dy": 87, "fontWeight":"bold", "color":"#ffffff" },
+      "mobilizacao":    { "dx": -180, "dy": 130, "bold": false, "color":"#000000" }
     }
   },
 
@@ -86,14 +91,13 @@
   },
 
   "page5": {
-    "validadeProposta": { "x": 350, "y": 267, "prefix": " ", "suffix": "", "rightAlign": true }
+    "validadeProposta": { "x": 350, "y": 267, "prefix": " ", "suffix": "", "rightAlign": true, "bold": true, "color": "#000000" }
   },
-
   "page6": {
-    "validadeProposta": { "x": 137, "y": 227, "prefix": " ", "suffix": "", "rightAlign": true },
-    "mobilizacaoText": { "x": 60, "y": 640, "maxW": 480, "lineStep": 12, "fontSize": 10 },
-    "materiais": { "label": { "x": 420, "y": 230 }, "value": { "x": 210, "y": 395 } },
-    "servicos":  { "label": { "x": 420, "y": 214 }, "value": { "x": 210, "y": 305 } },
-    "mobilizacao": { "label": { "x": 420, "y": 198 }, "value": { "x": 560, "y": 198 } }
+    "validadeProposta": { "x": 135, "y": 227, "prefix": " ", "suffix": "", "rightAlign": true, "font":"bold", "colorHex": "#000000" },
+
+    "materiais": { "value": { "x": 210, "y": 395 }, "valueStyle": { "bold": true, "color": "#000000" } },
+    "servicos":  { "value": { "x": 210, "y": 305 }, "valueStyle": { "font":"bold", "colorHex": "#000000" } }
   }
+
 }
