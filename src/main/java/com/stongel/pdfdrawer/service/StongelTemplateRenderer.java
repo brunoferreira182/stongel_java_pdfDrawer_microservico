@@ -34,8 +34,8 @@ public class StongelTemplateRenderer {
     private static final byte[] FONT_MONO_BYTES = FONT_REG_BYTES;
     private static final float FONT_H = 10f;
 
-    // ================== COR DA MARCA (APLICADA AOS TEXTOS) ==================
-    private static final Color BRAND = new Color(0x22, 0x48, 0x7f); // #22487f
+    // ================== COR DA MARCA (AGORA PRETO) ==================
+    private static final Color BRAND = Color.BLACK;
 
     private final ThreadLocal<Fonts> fontContext = new ThreadLocal<>();
     private final ObjectMapper om = new ObjectMapper();
@@ -175,7 +175,7 @@ public class StongelTemplateRenderer {
                         }
                     }
 
-                    // Totais (página 5) — MANTIDOS (sem "R$")
+                    // Totais (página 5) — MANTIDOS (sem "R$") e SEM "Desconto" / "Total Geral"
                     drawTotalsValuesOnlyAdjusted(cs, dto.getTotais(), X_TOT_TAB_LABEL, X_TOT_TAB_VAL,
                             Y_TOT_TAB_TOP, Y_TOT_TAB_STEP, VAL_DX, VAL_DY, AJUSTES_IND, at(cfg, "totaisTables"));
                 }
@@ -364,7 +364,9 @@ public class StongelTemplateRenderer {
         cs.setNonStrokingColor(BRAND);
         cs.setStrokingColor(BRAND);
 
-        String[] keys = new String[]{ "subtotal", "desconto", "totalMateriais", "totalServicos", "mobilizacao", "totalGeral" };
+        // REMOVIDOS: "desconto" e "totalGeral"
+        String[] keys = new String[]{ "subtotal", "totalMateriais", "totalServicos", "mobilizacao" };
+
         for (int i = 0; i < keys.length; i++) {
             String key = keys[i];
             BigDecimal valor = getValorPorChave(t, key);
@@ -830,11 +832,11 @@ public class StongelTemplateRenderer {
     private static String formatLabel(String key) {
         return switch (key) {
             case "subtotal" -> "Subtotal";
-            case "desconto" -> "Desconto";
+            // "desconto" removido
             case "totalMateriais" -> "Total Materiais";
             case "totalServicos" -> "Total Serviços";
             case "mobilizacao" -> "Mobilização";
-            case "totalGeral" -> "TOTAL GERAL";
+            // "totalGeral" removido
             default -> key;
         };
     }
@@ -842,11 +844,11 @@ public class StongelTemplateRenderer {
     private static BigDecimal getValorPorChave(TotaisDto t, String key) {
         return switch (key) {
             case "subtotal" -> toBD(t.getSubtotal());
-            case "desconto" -> toBD(t.getDesconto());
+            case "desconto" -> toBD(t.getDesconto()); // mantido aqui para eventual uso interno, embora não exibido
             case "totalMateriais" -> toBD(t.getTotalMateriais());
             case "totalServicos" -> toBD(t.getTotalServicos());
             case "mobilizacao" -> toBD(t.getMobilizacao());
-            case "totalGeral" -> toBD(t.getTotalGeral());
+            case "totalGeral" -> toBD(t.getTotalGeral()); // idem
             default -> BigDecimal.ZERO;
         };
     }
@@ -1063,7 +1065,7 @@ public class StongelTemplateRenderer {
     private boolean boolCfg(JsonNode n, String path, boolean def) {
         JsonNode j = at(n, path);
         return (j != null && j.isBoolean()) ? j.asBoolean() : def;
-        }
+    }
 
     private BigDecimal number(JsonNode n, String path) {
         JsonNode j = at(n, path);
