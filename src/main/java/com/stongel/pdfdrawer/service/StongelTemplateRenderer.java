@@ -842,15 +842,24 @@ public class StongelTemplateRenderer {
         }
 
         TotaisDto tot = new TotaisDto();
-        tot.setTotalMateriais(number(root, "precificacao.totais.material"));
-        tot.setTotalServicos(number(root, "precificacao.totais.servico"));
-        BigDecimal desconto = BigDecimal.ZERO; tot.setDesconto(desconto);
-        BigDecimal subtotal = safeBD(tot.getTotalMateriais()).add(safeBD(tot.getTotalServicos()));
-        tot.setSubtotal(subtotal);
+        BigDecimal totalMateriais = number(root, "precificacao.totais.material");
+        BigDecimal totalServicosBase = number(root, "precificacao.totais.servico");
+        tot.setTotalMateriais(totalMateriais);
+        BigDecimal desconto = BigDecimal.ZERO;
+        tot.setDesconto(desconto);
+
         BigDecimal mobil = number(root, "precificacao.dadosMobilizacao.total.totalMobilizacao");
         if (mobil == null || mobil.compareTo(BigDecimal.ZERO) == 0) mobil = number(root, "precificacao.mobilizacao");
-        tot.setMobilizacao(mobil);
-        BigDecimal totalGeral = subtotal.add(safeBD(mobil)).subtract(safeBD(desconto));
+        BigDecimal mobilizacao = safeBD(mobil);
+        tot.setMobilizacao(mobilizacao);
+
+        BigDecimal totalServicosComMobilizacao = safeBD(totalServicosBase).add(mobilizacao);
+        tot.setTotalServicos(totalServicosComMobilizacao);
+
+        BigDecimal subtotal = safeBD(totalMateriais).add(totalServicosComMobilizacao);
+        tot.setSubtotal(subtotal);
+
+        BigDecimal totalGeral = subtotal.subtract(safeBD(desconto));
         tot.setTotalGeral(totalGeral);
 
         BudgetDto dto = new BudgetDto();
