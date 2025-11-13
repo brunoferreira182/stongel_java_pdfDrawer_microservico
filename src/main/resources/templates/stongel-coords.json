@@ -28,7 +28,7 @@
       "xSubtotalRight": 510,
       "descDx": -30,
       "descDy": 0,
-      "yFirst": 555,
+      "yFirst": 690,
       "rowStep": 16,
       "yMin": 380,
 
@@ -60,10 +60,10 @@
     "valDy":   0,
 
     "ajustesIndividuais": {
-      "subtotal":       { "dx": -100, "dy":  35, "bold": true,  "color": "#ffffff" },
+      "subtotal":       { "dx": -100, "dy":  -103, "bold": true,  "color": "#ffffff" },
       "totalMateriais": { "dx": -100, "dy": 253, "font":"bold", "colorHex": "#ffffff" },
-      "totalServicos":  { "dx": -100, "dy": 87, "fontWeight":"bold", "color":"#ffffff" },
-      "mobilizacao":    { "dx": -180, "dy": 130, "bold": false, "color":"#000000" }
+      "totalServicos":  { "dx": -100, "dy": -52, "fontWeight":"bold", "color":"#ffffff" },
+      "mobilizacao":    { "dx": -180, "dy": -10, "bold": false, "color":"#000000" }
     }
   },
 
@@ -91,7 +91,7 @@
   },
 
   "page5": {
-    "validadeProposta": { "x": 350, "y": 267, "prefix": " ", "suffix": "", "rightAlign": true, "bold": true, "color": "#000000" }
+    "validadeProposta": { "x": 350, "y": 130, "prefix": " ", "suffix": "", "rightAlign": true, "bold": true, "color": "#000000" }
   },
   "page6": {
     "validadeProposta": { "x": 135, "y": 227, "prefix": " ", "suffix": "", "rightAlign": true, "font":"bold", "colorHex": "#000000" },
