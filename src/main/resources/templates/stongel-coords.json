@@ -91,10 +91,12 @@
   },
 
   "page5": {
-    "validadeProposta": { "x": 350, "y": 130, "prefix": " ", "suffix": "", "rightAlign": true, "bold": true, "color": "#000000" }
+    "validadeProposta": { "x": 420, "y": 130, "prefix": " ", "suffix": "", "rightAlign": true, "bold": true, "color": "#000000" },
+    "validadePropostaLong": { "x": 450, "y": 128, "prefix": " ", "suffix": "", "rightAlign": true, "font":"bold", "colorHex": "#000000" }
   },
   "page6": {
-    "validadeProposta": { "x": 135, "y": 227, "prefix": " ", "suffix": "", "rightAlign": true, "font":"bold", "colorHex": "#000000" },
+    "validadeProposta": { "x": 170, "y": 225, "prefix": " ", "suffix": "", "rightAlign": true, "font":"bold", "colorHex": "#000000" },
+    "validadePropostaLong": { "x": 250, "y": 225, "prefix": " ", "suffix": "", "rightAlign": true, "font":"bold", "colorHex": "#000000" },
 
     "materiais": { "value": { "x": 210, "y": 395 }, "valueStyle": { "bold": true, "color": "#000000" } },
     "servicos":  { "value": { "x": 210, "y": 305 }, "valueStyle": { "font":"bold", "colorHex": "#000000" } }

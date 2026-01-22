@@ -262,23 +262,49 @@ public class StongelTemplateRenderer {
         if (validade == null || validade.isBlank()) return;
         if (pageIndex < 0 || pageIndex >= doc.getNumberOfPages()) return;
 
-        Float xF = getFOrNull(cfg, cfgKey + ".x");
-        Float yF = getFOrNull(cfg, cfgKey + ".y");
+        String raw = validade.trim();
+        if (raw.isEmpty()) return;
+
+        boolean digitsOnly = isDigitsOnly(raw);
+        String formatted = digitsOnly ? raw + " dia(s)" : raw;
+
+        String resolvedKey = cfgKey;
+        if (!digitsOnly && raw.length() > VALIDITY_LONG_THRESHOLD) {
+            String longKey = cfgKey + "Long";
+            if (getFOrNull(cfg, longKey + ".x") != null && getFOrNull(cfg, longKey + ".y") != null) {
+                resolvedKey = longKey;
+            }
+        }
+
+        Float xF = getFOrNull(cfg, resolvedKey + ".x");
+        Float yF = getFOrNull(cfg, resolvedKey + ".y");
         if (xF == null || yF == null) return;
 
         float x = xF.floatValue();
         float y = yF.floatValue();
 
-        String prefix = textCfg(cfg, cfgKey + ".prefix", " ");
-        String suffix = textCfg(cfg, cfgKey + ".suffix", "");
-        boolean rightAlign = boolCfg(cfg, cfgKey + ".rightAlign", true);
+        String prefix = textCfg(cfg, resolvedKey + ".prefix", null);
+        if (prefix == null) {
+            prefix = textCfg(cfg, cfgKey + ".prefix", " ");
+        }
+        String suffix = textCfg(cfg, resolvedKey + ".suffix", null);
+        if (suffix == null) {
+            suffix = textCfg(cfg, cfgKey + ".suffix", "");
+        }
+        JsonNode rightAlignNode = at(cfg, resolvedKey + ".rightAlign");
+        boolean rightAlign = (rightAlignNode != null && rightAlignNode.isBoolean())
+            ? rightAlignNode.asBoolean()
+            : boolCfg(cfg, cfgKey + ".rightAlign", true);
 
         // Permite definir estilo no próprio nó da validade:
         // pageX.validadeProposta.{ bold/font/fontWeight, color/colorHex } ou em .style / .valueStyle
         JsonNode style = resolveStyle(
+                at(cfg, resolvedKey + ".style"),
+                at(cfg, resolvedKey + ".valueStyle"),
+                at(cfg, resolvedKey),
                 at(cfg, cfgKey + ".style"),
                 at(cfg, cfgKey + ".valueStyle"),
-                at(cfg, cfgKey) // lê direto se você colocar "bold"/"color" no mesmo objeto
+                at(cfg, cfgKey)
         );
 
         PDPage page = doc.getPage(pageIndex);
@@ -289,7 +315,7 @@ public class StongelTemplateRenderer {
             applyValueStyleFromCfg(cs, style);
             PDFont f = getValueFont(style);
 
-            String txt = sanitizeText(prefix + validade + suffix);
+            String txt = sanitizeText(prefix + formatted + suffix);
             if (rightAlign) {
                 drawRightAligned(cs, f, FONT_H, x, y, txt);
             } else {
@@ -925,6 +951,18 @@ public class StongelTemplateRenderer {
         if (ajustes == null || ajustes.isMissingNode()) return 0f;
         JsonNode node = ajustes.path(key).path(axis);
         return node.isNumber() ? (float) node.asDouble() : 0f;
+    }
+
+    private static final int VALIDITY_LONG_THRESHOLD = 8;
+
+    private static boolean isDigitsOnly(String value) {
+        if (value == null) return false;
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) return false;
+        for (int i = 0; i < trimmed.length(); i++) {
+            if (!Character.isDigit(trimmed.charAt(i))) return false;
+        }
+        return true;
     }
 
     // ========== FORMATAÇÃO SEM PREFIXO "R$" ==========
