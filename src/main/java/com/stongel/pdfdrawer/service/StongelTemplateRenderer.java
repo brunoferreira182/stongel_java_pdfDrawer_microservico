@@ -198,6 +198,12 @@ public class StongelTemplateRenderer {
                     String validade = text(rawJson, "validadeProposta");
                     writeValidityAt(doc, 6, cfg, "page6.validadeProposta", validade);
                 }
+                if (rawJson != null) {
+                    String[] condicoes = resolvePaymentConditionLines(rawJson);
+                    boolean forceLong = hasCustomPaymentCondition(rawJson);
+                    writePaymentConditionAt(doc, 6, cfg, "page6.condicoesPagamento1", condicoes[0], forceLong);
+                    writePaymentConditionAt(doc, 6, cfg, "page6.condicoesPagamento2", condicoes[1], forceLong);
+                }
 
                 try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                     doc.save(baos);
@@ -322,6 +328,170 @@ public class StongelTemplateRenderer {
                 BR.drawText(cs, f, FONT_H, x, y, txt);
             }
         }
+    }
+
+    // ====================== Condições de pagamento em página específica (com estilo) ======================
+    private void writePaymentConditionAt(PDDocument doc, int pageIndex, JsonNode cfg, String cfgKey, String condicoesPagamento, boolean forceLong) throws IOException {
+        if (condicoesPagamento == null || condicoesPagamento.isBlank()) return;
+        if (pageIndex < 0 || pageIndex >= doc.getNumberOfPages()) return;
+
+        String raw = condicoesPagamento.trim();
+        if (raw.isEmpty()) return;
+
+        String resolvedKey = cfgKey;
+        String longKey = buildPaymentConditionLongKey(cfgKey);
+        if (forceLong) {
+            if (getFOrNull(cfg, longKey + ".x") != null && getFOrNull(cfg, longKey + ".y") != null) {
+                resolvedKey = longKey;
+            }
+        } else if (raw.length() > PAYMENT_CONDITION_LONG_THRESHOLD) {
+            if (getFOrNull(cfg, longKey + ".x") != null && getFOrNull(cfg, longKey + ".y") != null) {
+                resolvedKey = longKey;
+            }
+        }
+
+        Float xF = getFOrNull(cfg, resolvedKey + ".x");
+        Float yF = getFOrNull(cfg, resolvedKey + ".y");
+        if (xF == null || yF == null) return;
+
+        float x = xF.floatValue();
+        float y = yF.floatValue();
+
+        String prefix = textCfg(cfg, resolvedKey + ".prefix", null);
+        if (prefix == null) {
+            prefix = textCfg(cfg, cfgKey + ".prefix", " ");
+        }
+        String suffix = textCfg(cfg, resolvedKey + ".suffix", null);
+        if (suffix == null) {
+            suffix = textCfg(cfg, cfgKey + ".suffix", "");
+        }
+        JsonNode rightAlignNode = at(cfg, resolvedKey + ".rightAlign");
+        boolean rightAlign = (rightAlignNode != null && rightAlignNode.isBoolean())
+            ? rightAlignNode.asBoolean()
+            : boolCfg(cfg, cfgKey + ".rightAlign", true);
+
+        JsonNode style = resolveStyle(
+            at(cfg, resolvedKey + ".style"),
+            at(cfg, resolvedKey + ".valueStyle"),
+            at(cfg, resolvedKey),
+            at(cfg, cfgKey + ".style"),
+            at(cfg, cfgKey + ".valueStyle"),
+            at(cfg, cfgKey)
+        );
+
+        PDPage page = doc.getPage(pageIndex);
+        try (PDPageContentStream cs = new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
+            normalizeToCropBox(cs, page);
+            applyValueStyleFromCfg(cs, style);
+            PDFont f = getValueFont(style);
+
+            String txt = sanitizeText(prefix + raw + suffix);
+            if (rightAlign) {
+                drawRightAligned(cs, f, FONT_H, x, y, txt);
+            } else {
+                BR.drawText(cs, f, FONT_H, x, y, txt);
+            }
+        }
+    }
+
+    private String[] resolvePaymentConditionLines(JsonNode rawJson) {
+        String[] result = new String[] {"", ""};
+        if (rawJson == null) return result;
+
+        String custom = text(rawJson, "condicoesPagamentoCustom");
+        if (custom == null || custom.isBlank()) {
+            custom = text(rawJson, "condicaoPagamentoCustom");
+        }
+        if (custom != null && !custom.isBlank()) {
+            String trimmedCustom = custom.trim();
+            result[0] = trimmedCustom;
+            result[1] = trimmedCustom;
+            return result;
+        }
+
+        String line1 = text(rawJson, "condicoesPagamento1");
+        String line2 = text(rawJson, "condicoesPagamento2");
+        if ((line1 != null && !line1.isBlank()) || (line2 != null && !line2.isBlank())) {
+            result[0] = line1;
+            result[1] = line2;
+            return result;
+        }
+
+        JsonNode arrayNode = at(rawJson, "condicoesPagamento");
+        if (arrayNode != null && arrayNode.isArray()) {
+            if (arrayNode.size() > 0) {
+                result[0] = arrayNode.get(0).asText("");
+            }
+            if (arrayNode.size() > 1) {
+                result[1] = arrayNode.get(1).asText("");
+            }
+            if ((result[0] != null && !result[0].isBlank()) || (result[1] != null && !result[1].isBlank())) {
+                return result;
+            }
+        }
+
+        String raw = text(rawJson, "condicoesPagamento");
+        if (raw == null || raw.isBlank()) return result;
+
+        String trimmed = raw.trim();
+        String[] lines = trimmed.split("\\r?\\n");
+        if (lines.length > 1) {
+            result[0] = lines[0].trim();
+            result[1] = lines[1].trim();
+            if (!result[0].isBlank() && result[1].isBlank()) {
+                result[1] = result[0];
+            }
+            return result;
+        }
+
+        result = splitPaymentConditionText(trimmed);
+        if (!result[0].isBlank() && result[1].isBlank()) {
+            result[1] = result[0];
+        }
+        return result;
+    }
+
+    private boolean hasCustomPaymentCondition(JsonNode rawJson) {
+        String custom = text(rawJson, "condicoesPagamentoCustom");
+        if (custom != null && !custom.isBlank()) return true;
+        String customLegacy = text(rawJson, "condicaoPagamentoCustom");
+        if (customLegacy != null && !customLegacy.isBlank()) return true;
+        String custom1 = text(rawJson, "condicoesPagamentoCustom1");
+        if (custom1 != null && !custom1.isBlank()) return true;
+        String custom2 = text(rawJson, "condicoesPagamentoCustom2");
+        return custom2 != null && !custom2.isBlank();
+    }
+
+    private String buildPaymentConditionLongKey(String cfgKey) {
+        if (cfgKey == null) return null;
+        int i = cfgKey.length() - 1;
+        while (i >= 0 && Character.isDigit(cfgKey.charAt(i))) {
+            i -= 1;
+        }
+        if (i < cfgKey.length() - 1) {
+            return cfgKey.substring(0, i + 1) + "Long" + cfgKey.substring(i + 1);
+        }
+        return cfgKey + "Long";
+    }
+
+    private String[] splitPaymentConditionText(String raw) {
+        String[] result = new String[] { raw, "" };
+        if (raw == null) return result;
+        String trimmed = raw.trim();
+        if (trimmed.isEmpty()) {
+            result[0] = "";
+            return result;
+        }
+        int limit = Math.max(1, trimmed.length() / 2);
+        if (trimmed.length() <= 1) {
+            result[0] = trimmed;
+            return result;
+        }
+        int breakAt = trimmed.lastIndexOf(' ', limit);
+        if (breakAt <= 0) breakAt = limit;
+        result[0] = trimmed.substring(0, breakAt).trim();
+        result[1] = trimmed.substring(breakAt).trim();
+        return result;
     }
 
     // ====================== Totais (pág. 5) – estilo por item em ajustesIndividuais ======================
@@ -954,6 +1124,7 @@ public class StongelTemplateRenderer {
     }
 
     private static final int VALIDITY_LONG_THRESHOLD = 8;
+    private static final int PAYMENT_CONDITION_LONG_THRESHOLD = 20;
 
     private static boolean isDigitsOnly(String value) {
         if (value == null) return false;
