@@ -1,6 +1,8 @@
 package com.stongel.pdfdrawer.web;
 
 import com.stongel.pdfdrawer.service.StongelTemplateRenderer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -14,6 +16,7 @@ public class RenderController {
 
     private static final Logger log = LoggerFactory.getLogger(RenderController.class);
     private final StongelTemplateRenderer renderer;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public RenderController(StongelTemplateRenderer renderer) {
         this.renderer = renderer;
@@ -51,7 +54,8 @@ public class RenderController {
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentLength(pdf.length);
             // inline = abre no navegador; use "attachment" se quiser forçar download
-            headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"orcamento.pdf\"");
+            String filename = resolveFilename(json);
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + ".pdf\"");
             // Expor esse header ao JS (além do Nginx já expor)
             headers.add("Access-Control-Expose-Headers", "Content-Disposition");
 
@@ -86,5 +90,39 @@ public class RenderController {
     private static String escapeJson(String s) {
         if (s == null) return "";
         return s.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private String resolveFilename(String json) {
+        try {
+            JsonNode root = objectMapper.readTree(json);
+            String revisionCode = textValue(root, "codigoOrcamentoRevisao");
+            String budgetCode = textValue(root, "codigoOrcamento");
+            String raw = revisionCode != null && !revisionCode.isBlank()
+                ? revisionCode
+                : budgetCode;
+            String normalized = normalizeCode(raw);
+            return normalized.isBlank() ? "orcamento" : normalized;
+        } catch (Exception e) {
+            return "orcamento";
+        }
+    }
+
+    private String textValue(JsonNode root, String field) {
+        if (root == null || field == null) return null;
+        JsonNode node = root.get(field);
+        return node != null && !node.isNull() ? node.asText() : null;
+    }
+
+    private String normalizeCode(String code) {
+        if (code == null) return "";
+        String value = code.trim();
+        if (value.isEmpty()) return "";
+        int slash = value.indexOf('/');
+        if (slash >= 0) value = value.substring(0, slash).trim();
+        value = value.replaceAll("[_\\s]+", "-");
+        value = value.replaceAll("[^A-Za-z0-9-]", "");
+        value = value.replaceAll("-+", "-");
+        value = value.replaceAll("^-+|-+$", "");
+        return value.toUpperCase();
     }
 }
