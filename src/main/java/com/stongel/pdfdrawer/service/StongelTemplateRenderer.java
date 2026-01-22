@@ -384,12 +384,13 @@ public class StongelTemplateRenderer {
             normalizeToCropBox(cs, page);
             applyValueStyleFromCfg(cs, style);
             PDFont f = getValueFont(style);
+            float fontSize = isPaymentConditionLongKey(resolvedKey) ? PAYMENT_CONDITION_LONG_FONT_SIZE : FONT_H;
 
             String txt = sanitizeText(prefix + raw + suffix);
             if (rightAlign) {
-                drawRightAligned(cs, f, FONT_H, x, y, txt);
+                drawRightAligned(cs, f, fontSize, x, y, txt);
             } else {
-                BR.drawText(cs, f, FONT_H, x, y, txt);
+                BR.drawText(cs, f, fontSize, x, y, txt);
             }
         }
     }
@@ -472,6 +473,10 @@ public class StongelTemplateRenderer {
             return cfgKey.substring(0, i + 1) + "Long" + cfgKey.substring(i + 1);
         }
         return cfgKey + "Long";
+    }
+
+    private boolean isPaymentConditionLongKey(String key) {
+        return key != null && key.contains("condicoesPagamentoLong");
     }
 
     private String[] splitPaymentConditionText(String raw) {
@@ -1125,6 +1130,7 @@ public class StongelTemplateRenderer {
 
     private static final int VALIDITY_LONG_THRESHOLD = 8;
     private static final int PAYMENT_CONDITION_LONG_THRESHOLD = 20;
+    private static final float PAYMENT_CONDITION_LONG_FONT_SIZE = 8f;
 
     private static boolean isDigitsOnly(String value) {
         if (value == null) return false;
