@@ -91,8 +91,8 @@
   },
 
   "page5": {
-    "validadeProposta": { "x": 420, "y": 130, "prefix": " ", "suffix": "", "rightAlign": true, "bold": true, "color": "#000000" },
-    "validadePropostaLong": { "x": 450, "y": 128, "prefix": " ", "suffix": "", "rightAlign": true, "font":"bold", "colorHex": "#000000" }
+    "previsaoExecucao": { "x": 420, "y": 130, "prefix": " ", "suffix": "", "rightAlign": true, "bold": true, "color": "#000000" },
+    "previsaoExecucaoLong": { "x": 450, "y": 128, "prefix": " ", "suffix": "", "rightAlign": true, "font":"bold", "colorHex": "#000000" }
   },
   "page6": {
     "condicoesPagamento1": { "x": 270, "y": 368, "prefix": " ", "suffix": "", "rightAlign": true, "font":"bold", "colorHex": "#000000" },

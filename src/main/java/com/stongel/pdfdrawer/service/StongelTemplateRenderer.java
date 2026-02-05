@@ -181,8 +181,8 @@ public class StongelTemplateRenderer {
 
                 // Validade (pág. 5) – agora permite estilo (bold/cor) no próprio nó
                 if (rawJson != null) {
-                    String validade = text(rawJson, "validadeProposta");
-                    writeValidityAt(doc, 5, cfg, "page5.validadeProposta", validade);
+                    String previsao = text(rawJson, "previsaoExecucao");
+                    writeValidityAt(doc, 5, cfg, "page5.previsaoExecucao", previsao);
                 }
 
                 // Seções
@@ -449,7 +449,29 @@ public class StongelTemplateRenderer {
         if (!result[0].isBlank() && result[1].isBlank()) {
             result[1] = result[0];
         }
+        syncPaymentConditionLines(result);
         return result;
+    }
+
+    private void syncPaymentConditionLines(String[] lines) {
+        if (lines == null || lines.length < 2) return;
+        String line1 = lines[0] == null ? "" : lines[0].trim();
+        String line2 = lines[1] == null ? "" : lines[1].trim();
+        if (line1.isEmpty() || line2.isEmpty()) return;
+        String norm1 = normalizePaymentText(line1);
+        String norm2 = normalizePaymentText(line2);
+        if (!norm1.isEmpty() && norm1.equals(norm2)) {
+            lines[1] = line1;
+        }
+    }
+
+    private String normalizePaymentText(String value) {
+        if (value == null) return "";
+        String normalized = java.text.Normalizer.normalize(value, java.text.Normalizer.Form.NFD)
+            .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+        normalized = normalized.toLowerCase();
+        normalized = normalized.replaceAll("[^a-z0-9]+", "");
+        return normalized;
     }
 
     private boolean hasCustomPaymentCondition(JsonNode rawJson) {
