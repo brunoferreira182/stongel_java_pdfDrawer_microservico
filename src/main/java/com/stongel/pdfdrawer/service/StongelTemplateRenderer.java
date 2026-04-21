@@ -12,6 +12,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.util.Matrix;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Component
@@ -61,7 +64,9 @@ public class StongelTemplateRenderer {
         }
 
         int PAGE_IDX_HEADER_TOTAIS = getInt(cfg, "pageIndexes.headerTotais", 0);
-        int PAGE_IDX_TABELAS = 5; // fixo
+        int PAGE_IDX_TABELAS = getInt(cfg, "pageIndexes.tables", 5);
+        int PAGE_IDX_PREVISAO_EXECUCAO = getInt(cfg, "pageIndexes.previsaoExecucao", 5);
+        int PAGE_IDX_VALIDADE_CONDICOES = getInt(cfg, "pageIndexes.validadeCondicoes", 6);
 
         // Coordenadas empresa (página 1)
         float X_EMP_RAZAO = getF(cfg, "empresa.razao.x", -10000f);
@@ -182,12 +187,13 @@ public class StongelTemplateRenderer {
                 // Validade (pág. 5) – agora permite estilo (bold/cor) no próprio nó
                 if (rawJson != null) {
                     String previsao = text(rawJson, "previsaoExecucao");
-                    writeValidityAt(doc, 5, cfg, "page5.previsaoExecucao", previsao);
+                    writeValidityAt(doc, PAGE_IDX_PREVISAO_EXECUCAO, cfg, "page5.previsaoExecucao", previsao);
                 }
 
                 // Seções
                 if (rawJson != null) {
                     renderSections(doc, rawJson, cfg, PAGE_IDX_HEADER_TOTAIS, PAGE_IDX_TABELAS, debugGrid, gridStep, gridMajor);
+                    renderSystemInfoImageOnPage4(doc, rawJson, cfg);
                 }
 
                 // Página 6 – valores (com estilo via JSON apenas nos VALORES)
@@ -196,13 +202,13 @@ public class StongelTemplateRenderer {
                 // Validade (pág. 6) – idem pág. 5
                 if (rawJson != null) {
                     String validade = text(rawJson, "validadeProposta");
-                    writeValidityAt(doc, 6, cfg, "page6.validadeProposta", validade);
+                    writeValidityAt(doc, PAGE_IDX_VALIDADE_CONDICOES, cfg, "page6.validadeProposta", validade);
                 }
                 if (rawJson != null) {
                     String[] condicoes = resolvePaymentConditionLines(rawJson);
                     boolean forceLong = hasCustomPaymentCondition(rawJson);
-                    writePaymentConditionAt(doc, 6, cfg, "page6.condicoesPagamento1", condicoes[0], forceLong);
-                    writePaymentConditionAt(doc, 6, cfg, "page6.condicoesPagamento2", condicoes[1], forceLong);
+                    writePaymentConditionAt(doc, PAGE_IDX_VALIDADE_CONDICOES, cfg, "page6.condicoesPagamento1", condicoes[0], forceLong);
+                    writePaymentConditionAt(doc, PAGE_IDX_VALIDADE_CONDICOES, cfg, "page6.condicoesPagamento2", condicoes[1], forceLong);
                 }
 
                 try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
@@ -213,6 +219,75 @@ public class StongelTemplateRenderer {
                 fontContext.remove();
             }
         }
+    }
+
+    private void renderSystemInfoImageOnPage4(PDDocument doc, JsonNode rawJson, JsonNode cfg) throws IOException {
+        JsonNode section = findSectionBySlug(rawJson, "1-informacoes-do-sistema");
+        if (section == null) return;
+
+        String imageRef = firstNonEmptyText(section, "sistemaImagemUrl", "systemInfoImageUrl", "imagemUrl", "imageUrl");
+        if (imageRef == null || imageRef.isBlank()) return;
+
+        String filename = extractImageFilename(imageRef);
+        if (filename.isBlank()) return;
+
+        PDImageXObject image;
+        try (InputStream is = new ClassPathResource("templates/sistemas/" + filename).getInputStream()) {
+            image = PDImageXObject.createFromByteArray(doc, is.readAllBytes(), filename);
+        } catch (Exception e) {
+            return;
+        }
+
+        int pageIndex = getInt(cfg, "systemInfoImage.page", 3);
+        if (pageIndex < 0 || pageIndex >= doc.getNumberOfPages()) return;
+
+        float x = getF(cfg, "systemInfoImage.x", 95f);
+        float y = getF(cfg, "systemInfoImage.y", 130f);
+        float maxW = getF(cfg, "systemInfoImage.maxW", 430f);
+        float maxH = getF(cfg, "systemInfoImage.maxH", 280f);
+
+        PDPage page = doc.getPage(pageIndex);
+        try (PDPageContentStream cs = new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
+            normalizeToCropBox(cs, page);
+            drawImageFit(cs, image, x, y, maxW, maxH);
+        }
+    }
+
+    private JsonNode findSectionBySlug(JsonNode raw, String slug) {
+        if (raw == null || slug == null || slug.isBlank()) return null;
+        JsonNode arr = raw.path("sections");
+        if (arr == null || !arr.isArray()) return null;
+        for (JsonNode s : arr) {
+            if (slug.equals(text(s, "slug"))) return s;
+        }
+        return null;
+    }
+
+    private String extractImageFilename(String imageRef) {
+        if (imageRef == null) return "";
+        String raw = imageRef.trim();
+        if (raw.isBlank()) return "";
+        int q = raw.indexOf('?');
+        if (q >= 0) raw = raw.substring(0, q);
+        int hash = raw.indexOf('#');
+        if (hash >= 0) raw = raw.substring(0, hash);
+        int slash = raw.lastIndexOf('/');
+        String filename = slash >= 0 ? raw.substring(slash + 1) : raw;
+        return URLDecoder.decode(filename, StandardCharsets.UTF_8).trim();
+    }
+
+    private void drawImageFit(PDPageContentStream cs, PDImageXObject image,
+                              float x, float y, float maxW, float maxH) throws IOException {
+        if (image == null || maxW <= 0 || maxH <= 0) return;
+        float iw = image.getWidth();
+        float ih = image.getHeight();
+        if (iw <= 0 || ih <= 0) return;
+        float scale = Math.min(maxW / iw, maxH / ih);
+        float drawW = iw * scale;
+        float drawH = ih * scale;
+        float dx = x + (maxW - drawW) / 2f;
+        float dy = y + (maxH - drawH) / 2f;
+        cs.drawImage(image, dx, dy, drawW, drawH);
     }
 
     // ====================== PÁG. 6: VALORES (SEM PREFIXO) + ESTILO VIA JSON ======================
